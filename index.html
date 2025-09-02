@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowRead - Train your eyes, guide your mind, flow through words</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+    <div id="app">
+        <header class="header">
+            <div class="header-content">
+                <div class="brand">
+                    <h1 class="logo">📖 FlowRead</h1>
+                    <p class="tagline">Train your eyes, guide your mind, flow through words</p>
+                </div>
+                
+                <nav class="nav">
+                    <button class="nav-btn active" data-mode="test">
+                        <span class="nav-icon">🎯</span>
+                        <span class="nav-label">Test</span>
+                    </button>
+                    <button class="nav-btn" data-mode="train">
+                        <span class="nav-icon">⚡</span>
+                        <span class="nav-label">Train</span>
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="main" id="main">
+            <!-- Test Screen (Merged Home/Assessment/Progress) -->
+            <div class="screen active" id="test-screen">
+                <!-- Compact Dashboard -->
+                <div class="test-dashboard">
+                    <div class="dashboard-stats">
+                        <div class="dashboard-stat">
+                            <div class="stat-label">Latest Test</div>
+                            <div class="stat-value" id="latest-wpm">--</div>
+                            <div class="stat-unit">WPM</div>
+                        </div>
+                        <div class="dashboard-stat">
+                            <div class="stat-label">Best Test</div>
+                            <div class="stat-value" id="best-wpm">--</div>
+                            <div class="stat-unit">WPM</div>
+                        </div>
+                        <div class="dashboard-graph">
+                            <div class="graph-label">Progress Over Time</div>
+                            <canvas id="progress-mini-chart" width="200" height="60"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Area -->
+                <div class="test-area" id="test-area">
+                    <!-- Test Instructions -->
+                    <div class="test-instructions">
+                        <div class="instruction-card">
+                            <h3>📖 Reading Speed Test</h3>
+                            <p>Read the passage below at your normal pace. We'll measure your speed and track your progress.</p>
+                        </div>
+                    </div>
+
+                    <!-- Test Controls -->
+                    <div class="test-controls">
+                        <button id="begin-test" class="primary-btn">Begin Test</button>
+                        <div class="test-timer" style="display: none;">
+                            <span class="timer-label">Reading Time:</span>
+                            <span class="timer" id="test-timer">0:00</span>
+                        </div>
+                        <button id="done-test" class="primary-btn" style="display: none;">Done</button>
+                    </div>
+
+                    <!-- Test Content -->
+                    <div class="test-content" id="test-content"></div>
+                </div>
+
+                <!-- Test Results -->
+                <div class="test-results" id="test-results" style="display: none;">
+                    <div class="results-header">
+                        <h3>🎯 Your Reading Speed</h3>
+                    </div>
+                    
+                    <div class="speed-display">
+                        <div class="speed-number" id="result-wpm">250</div>
+                        <div class="speed-unit">Words Per Minute</div>
+                    </div>
+
+                    <!-- WPM Scale -->
+                    <div class="wpm-scale">
+                        <div class="scale-track">
+                            <div class="scale-marker" id="user-marker"></div>
+                        </div>
+                        <div class="scale-labels">
+                            <span class="scale-label">0</span>
+                            <span class="scale-label">150</span>
+                            <span class="scale-label">300</span>
+                            <span class="scale-label">500</span>
+                            <span class="scale-label">750</span>
+                            <span class="scale-label">1000</span>
+                        </div>
+                        <div class="scale-categories">
+                            <div class="category beginner">📚 Reading Rookie</div>
+                            <div class="category cruiser">🚗 Text Cruiser</div>
+                            <div class="category speedster">⚡ Speed Demon</div>
+                            <div class="category champion">🏆 Reading Champion</div>
+                            <div class="category legendary">🚀 Word Wizard</div>
+                        </div>
+                    </div>
+
+                    <button id="complete-test" class="primary-btn">Complete</button>
+                </div>
+            </div>
+
+            <!-- Train Screen -->
+            <div class="screen" id="train-screen">
+                <!-- Training Mode Selection -->
+                <div class="training-mode-selection">
+                    <div class="training-mode-tabs">
+                        <button class="mode-tab active" data-mode="line-by-line" onclick="selectTrainingMode('line-by-line')">
+                            <span class="tab-icon">📖</span>
+                            <span class="tab-title">Line-By-Line</span>
+                        </button>
+                        <button class="mode-tab" data-mode="word-by-word" onclick="selectTrainingMode('word-by-word')">
+                            <span class="tab-icon">⚡</span>
+                            <span class="tab-title">Word-By-Word</span>
+                        </button>
+                    </div>
+                    <div class="mode-instructions" id="mode-instructions">
+                        <p>Read line by line with guided pacing to build smooth reading flow and reduce subvocalization. Perfect for developing natural reading rhythm.</p>
+                    </div>
+                </div>
+
+                <!-- Controls Panel -->
+                <div class="training-controls-panel">
+                    <div class="controls-layout-centered">
+                        <!-- Start Button + Speed Control -->
+                        <div class="speed-control-section">
+                            <button id="start-training" class="primary-btn compact-btn">
+                                <span class="btn-text">▶️ START</span>
+                            </button>
+                            
+                            <!-- Training Action Buttons -->
+                            <div class="training-actions-top">
+                                <button id="pause-training" class="action-btn" style="display: none;">
+                                    <span class="btn-text">⏸️ Pause</span>
+                                </button>
+                                <button id="stop-training" class="action-btn" style="display: none;">
+                                    <span class="btn-text">⏹️ Stop</span>
+                                </button>
+                            </div>
+                            
+                            <div class="speed-dial">
+                                <label class="control-label">Reading Speed</label>
+                                <div class="slider-group">
+                                    <span class="slider-min">100</span>
+                                    <input type="range" id="training-speed-slider" min="100" max="999" value="250" step="10">
+                                    <span class="slider-max">999</span>
+                                </div>
+                                <div class="control-display">
+                                    <span id="speed-value">250</span> WPM
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reading Display -->
+                <div class="training-display">
+                    <div class="text-controls">
+                        <div class="controls-left">
+                            <button class="secondary-btn" id="custom-text-btn" onclick="showCustomTextDialog()">
+                                📝 Custom Text
+                            </button>
+                        </div>
+                        <div class="controls-right">
+                            <!-- Line-by-Line View Mode Toggle -->
+                            <div class="view-mode-inline" id="view-mode-section" style="display: block;">
+                                <div class="inline-toggle-buttons">
+                                    <button class="inline-toggle-btn active" data-view="full-text" onclick="setLineViewMode('full-text')">
+                                        📄 Full Text
+                                    </button>
+                                    <button class="inline-toggle-btn" data-view="single-line" onclick="setLineViewMode('single-line')">
+                                        📝 Single Line
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Text Size Control -->
+                            <div class="text-size-control" id="text-size-section" style="display: block;">
+                                <div class="size-toggle-buttons">
+                                    <button class="size-toggle-btn" data-size="small" onclick="setTextSize('small')">
+                                        🔤 S
+                                    </button>
+                                    <button class="size-toggle-btn active" data-size="medium" onclick="setTextSize('medium')">
+                                        🔤 M
+                                    </button>
+                                    <button class="size-toggle-btn" data-size="large" onclick="setTextSize('large')">
+                                        🔤 L
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Line-by-Line Training Area - Full Text View -->
+                    <div class="text-content line-by-line-area full-text-view" id="training-text">
+                        <div class="line-pacer" id="line-pacer"></div>
+                    </div>
+
+                    <!-- Line-by-Line Training Area - Single Line View -->
+                    <div class="text-content line-by-line-area single-line-view" id="single-line-text" style="display: none;">
+                        <div class="single-line-container">
+                            <div class="single-line-display" id="current-line-display"></div>
+                            <div class="line-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="line-progress-fill"></div>
+                                </div>
+                                <div class="line-counter">
+                                    <span id="current-line-index">0</span> / <span id="total-lines">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Word-by-Word Training Area -->
+                    <div class="text-content word-by-word-area" id="word-training-text" style="display: none;">
+                        <div class="word-display-container">
+                            <div class="word-display" id="current-word"></div>
+                            <div class="word-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="word-progress-fill"></div>
+                                </div>
+                                <div class="word-counter">
+                                    <span id="current-word-index">0</span> / <span id="total-words">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+
+            <!-- Text Input Modal -->
+            <div class="modal" id="text-input-modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3>Add Your Text</h3>
+                    <textarea id="custom-text" placeholder="Paste your text here..." rows="10"></textarea>
+                    <div class="modal-controls">
+                        <button class="secondary-btn" onclick="closeTextModal()">Cancel</button>
+                        <button class="primary-btn" onclick="useCustomText()">Use This Text</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Training Text Modal -->
+            <div class="modal" id="custom-training-text-modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeCustomTrainingTextDialog()">&times;</span>
+                    <h3>📝 Add Custom Training Text</h3>
+                    <p class="modal-description">Paste your own text for training. The text will be formatted into lines for the line-by-line pacer training.</p>
+                    <textarea id="custom-training-text" placeholder="Paste your text here for training..." rows="12"></textarea>
+                    <div class="text-stats" id="custom-text-stats">
+                        <span class="stat-item">Words: <span id="word-count">0</span></span>
+                        <span class="stat-item">Estimated time: <span id="estimated-time">0 min</span></span>
+                    </div>
+                    <div class="modal-controls">
+                        <button class="secondary-btn" onclick="closeCustomTrainingTextDialog()">Cancel</button>
+                        <button class="primary-btn" onclick="useCustomTrainingText()">Use This Text</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Settings Panel -->
+        <div class="settings-panel" id="settings-panel">
+            <div class="settings-content">
+                <h3>Settings</h3>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="dyslexic-font"> Dyslexic-friendly font
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="high-contrast"> High contrast mode
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="motion-sensitive"> Reduce motion
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/textprocessing.js"></script>
+    <script src="js/comprehension.js"></script>
+    <script src="js/drills.js"></script>
+    <script src="js/reading.js"></script>
+    <script src="js/progress.js"></script>
+    <script src="js/assessment.js"></script>
+    <script src="js/training.js"></script>
+    <script src="js/test.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

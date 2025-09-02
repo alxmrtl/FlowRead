@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowRead Training Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .training-text {
+            position: relative;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 8px;
+            font-size: 1.125rem;
+            line-height: 1.8;
+        }
+        
+        .text-line {
+            margin: 0.5rem 0;
+            padding: 0.25rem 0;
+        }
+        
+        .line-pacer {
+            position: absolute;
+            background: rgba(0, 123, 255, 0.2);
+            border: 2px solid rgba(0, 123, 255, 0.4);
+            border-radius: 4px;
+            opacity: 0;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+        
+        .line-pacer.active {
+            opacity: 1;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .secondary {
+            background: #6c757d;
+        }
+        
+        .secondary:hover {
+            background: #545b62;
+        }
+        
+        .stats {
+            background: #e9ecef;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>FlowRead Training Zone Debug</h1>
+    
+    <div class="stats">
+        <strong>Speed:</strong> <span id="current-wpm">250</span> WPM |
+        <strong>Line:</strong> <span id="current-line">0</span> |
+        <strong>Status:</strong> <span id="status">Ready</span>
+    </div>
+    
+    <div class="controls">
+        <label>Speed: 
+            <input type="range" id="speed-slider" min="100" max="999" value="250">
+            <span id="speed-value">250</span> WPM
+        </label>
+    </div>
+    
+    <div class="training-text" id="training-text">
+        <!-- Text will be loaded here -->
+    </div>
+    
+    <div class="controls">
+        <button id="start-btn">Start Training</button>
+        <button id="pause-btn" class="secondary" style="display: none;">Pause</button>
+        <button id="stop-btn" class="secondary" style="display: none;">Stop</button>
+    </div>
+    
+    <div id="debug-log" style="background: #f8f9fa; padding: 1rem; margin-top: 2rem; font-family: monospace; font-size: 0.875rem; white-space: pre-line;"></div>
+
+    <script>
+        // Simple debug version
+        class DebugTrainingZone {
+            constructor() {
+                this.lines = [];
+                this.currentLine = 0;
+                this.isTraining = false;
+                this.wpm = 250;
+                this.animationId = null;
+                this.startTime = null;
+                
+                this.init();
+            }
+            
+            log(message) {
+                const debugLog = document.getElementById('debug-log');
+                const timestamp = new Date().toLocaleTimeString();
+                debugLog.textContent += `[${timestamp}] ${message}\n`;
+                debugLog.scrollTop = debugLog.scrollHeight;
+                console.log(message);
+            }
+            
+            init() {
+                this.log('Initializing debug training zone...');
+                this.loadText();
+                this.setupControls();
+                this.log('Initialization complete');
+            }
+            
+            loadText() {
+                const sampleText = `Reading has evolved dramatically over the centuries, from ancient scrolls to digital screens. Today, we face new challenges in how we process information in an increasingly connected world. The average person now encounters more text in a single day than previous generations might have seen in weeks. Social media posts, emails, articles, and notifications compete for our attention. This information overload has created a need for more efficient reading strategies. Speed reading techniques have gained popularity as a response to this challenge.`;
+                
+                const words = sampleText.split(/\s+/);
+                this.lines = [];
+                
+                // Create lines of 8-12 words
+                for (let i = 0; i < words.length; i += 10) {
+                    const lineWords = words.slice(i, i + 10);
+                    this.lines.push(lineWords.join(' '));
+                }
+                
+                this.log(`Created ${this.lines.length} lines`);
+                
+                // Display text
+                const container = document.getElementById('training-text');
+                const linesHTML = this.lines.map((line, index) => 
+                    `<div class="text-line" data-line="${index}">${line}</div>`
+                ).join('');
+                
+                container.innerHTML = linesHTML + '<div class="line-pacer" id="line-pacer"></div>';
+                this.log('Text loaded into DOM');
+            }
+            
+            setupControls() {
+                const speedSlider = document.getElementById('speed-slider');
+                const speedValue = document.getElementById('speed-value');
+                const startBtn = document.getElementById('start-btn');
+                const pauseBtn = document.getElementById('pause-btn');
+                const stopBtn = document.getElementById('stop-btn');
+                
+                speedSlider.oninput = () => {
+                    this.wpm = parseInt(speedSlider.value);
+                    speedValue.textContent = this.wpm;
+                    document.getElementById('current-wpm').textContent = this.wpm;
+                };
+                
+                startBtn.onclick = () => this.startTraining();
+                pauseBtn.onclick = () => this.pauseTraining();
+                stopBtn.onclick = () => this.stopTraining();
+                
+                this.log('Controls setup complete');
+            }
+            
+            startTraining() {
+                if (this.isTraining) return;
+                
+                this.log(`Starting training at ${this.wpm} WPM`);
+                this.isTraining = true;
+                this.currentLine = 0;
+                this.startTime = Date.now();
+                
+                // Update UI
+                document.getElementById('start-btn').style.display = 'none';
+                document.getElementById('pause-btn').style.display = 'inline-block';
+                document.getElementById('stop-btn').style.display = 'inline-block';
+                document.getElementById('status').textContent = 'Training';
+                
+                this.animateLines();
+            }
+            
+            animateLines() {
+                const pacer = document.getElementById('line-pacer');
+                if (!pacer) {
+                    this.log('ERROR: Pacer element not found');
+                    return;
+                }
+                
+                pacer.classList.add('active');
+                
+                const nextLine = () => {
+                    if (!this.isTraining || this.currentLine >= this.lines.length) {
+                        if (this.currentLine >= this.lines.length) {
+                            this.log('Training complete - reached end of text');
+                            this.stopTraining();
+                        }
+                        return;
+                    }
+                    
+                    // Move pacer to current line
+                    const line = document.querySelector(`[data-line="${this.currentLine}"]`);
+                    if (line) {
+                        pacer.style.top = line.offsetTop + 'px';
+                        pacer.style.left = '0px';
+                        pacer.style.width = '100%';
+                        pacer.style.height = line.offsetHeight + 'px';
+                        
+                        this.log(`Line ${this.currentLine + 1}: "${this.lines[this.currentLine].substring(0, 30)}..."`);
+                        document.getElementById('current-line').textContent = this.currentLine + 1;
+                        
+                        // Calculate timing
+                        const words = this.lines[this.currentLine].split(/\s+/).length;
+                        const timePerWord = 60000 / this.wpm; // ms per word
+                        const lineTime = words * timePerWord;
+                        
+                        this.log(`${words} words × ${timePerWord.toFixed(0)}ms = ${lineTime.toFixed(0)}ms`);
+                        
+                        this.currentLine++;
+                        this.animationId = setTimeout(nextLine, lineTime);
+                    } else {
+                        this.log(`ERROR: Could not find line element ${this.currentLine}`);
+                    }
+                };
+                
+                nextLine();
+            }
+            
+            pauseTraining() {
+                if (!this.isTraining) return;
+                
+                this.isTraining = false;
+                if (this.animationId) {
+                    clearTimeout(this.animationId);
+                }
+                
+                document.getElementById('pause-btn').textContent = 'Resume';
+                document.getElementById('pause-btn').onclick = () => this.resumeTraining();
+                document.getElementById('status').textContent = 'Paused';
+                
+                this.log('Training paused');
+            }
+            
+            resumeTraining() {
+                this.isTraining = true;
+                document.getElementById('pause-btn').textContent = 'Pause';
+                document.getElementById('pause-btn').onclick = () => this.pauseTraining();
+                document.getElementById('status').textContent = 'Training';
+                
+                this.log('Training resumed');
+                this.animateLines();
+            }
+            
+            stopTraining() {
+                this.isTraining = false;
+                if (this.animationId) {
+                    clearTimeout(this.animationId);
+                }
+                
+                const pacer = document.getElementById('line-pacer');
+                if (pacer) {
+                    pacer.classList.remove('active');
+                }
+                
+                // Reset UI
+                document.getElementById('start-btn').style.display = 'inline-block';
+                document.getElementById('pause-btn').style.display = 'none';
+                document.getElementById('stop-btn').style.display = 'none';
+                document.getElementById('status').textContent = 'Stopped';
+                
+                const elapsed = Date.now() - this.startTime;
+                this.log(`Training stopped after ${(elapsed/1000).toFixed(1)}s`);
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.debugTraining = new DebugTrainingZone();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowRead Test Page</title>
+</head>
+<body>
+    <h1>FlowRead Functionality Test</h1>
+    
+    <h2>Core Modules Test</h2>
+    <div id="test-results"></div>
+    
+    <script src="js/storage.js"></script>
+    <script src="js/textprocessing.js"></script>
+    <script src="js/comprehension.js"></script>
+    <script src="js/drills.js"></script>
+    <script src="js/reading.js"></script>
+    <script src="js/progress.js"></script>
+    
+    <script>
+        // Simple test suite
+        async function runTests() {
+            const results = [];
+            
+            try {
+                // Test 1: Storage initialization
+                await storage.init();
+                results.push('✓ Storage initialized successfully');
+                
+                // Test 2: Text processing
+                const sampleText = "This is a test sentence. It has multiple words and punctuation.";
+                const wordCount = textProcessor.countWords(sampleText);
+                const sentences = textProcessor.getSentences(sampleText);
+                results.push(`✓ Text processing: ${wordCount} words, ${sentences.length} sentences`);
+                
+                // Test 3: Text chunking
+                const chunks = textProcessor.createChunks(sampleText, 3);
+                results.push(`✓ Text chunking: ${chunks.length} chunks created`);
+                
+                // Test 4: User creation
+                const user = await storage.getUser();
+                results.push(`✓ User management: User ID ${user.id.substring(0, 8)}...`);
+                
+                // Test 5: Sample text storage
+                const sampleTexts = storage.getSampleTexts();
+                if (sampleTexts.length > 0) {
+                    const savedText = await storage.saveText('Test Text', sampleTexts[0].content);
+                    results.push(`✓ Text storage: Saved text with ID ${savedText.id.substring(0, 8)}...`);
+                }
+                
+                // Test 6: Progress tracking initialization
+                await progressTracker.init();
+                results.push('✓ Progress tracking initialized');
+                
+                // Test 7: Adaptive engine
+                const adaptiveEngine = new AdaptiveProgressionEngine();
+                const recommendation = adaptiveEngine.calculateAdaptiveWPM({
+                    avgSpeed: 200,
+                    avgComprehension: 75,
+                    totalSessions: 5
+                }, []);
+                results.push(`✓ Adaptive engine: Recommended WPM ${recommendation}`);
+                
+                results.push('<br><strong>All tests passed! FlowRead is ready to use.</strong>');
+                
+            } catch (error) {
+                results.push(`✗ Error: ${error.message}`);
+                console.error('Test error:', error);
+            }
+            
+            document.getElementById('test-results').innerHTML = results.join('<br>');
+        }
+        
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>
