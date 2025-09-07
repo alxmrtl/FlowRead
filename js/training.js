@@ -1,3 +1,139 @@
+// Phrases Trainer Class (displays 6 words at once)
+class PhrasesTrainer {
+    constructor() {
+        this.phrases = [];
+        this.currentPhraseIndex = 0;
+        this.isTraining = false;
+        this.isPaused = false;
+        this.intervalId = null;
+        this.wpm = 250;
+        this.currentText = '';
+        this.customText = null;
+    }
+
+    init() {
+        console.log('PhrasesTrainer initialized');
+    }
+
+    setCustomText(text) {
+        this.customText = text;
+        console.log('Custom text set for phrases trainer');
+    }
+
+    setMode(mode) {
+        console.log('Phrases trainer mode set to:', mode);
+    }
+
+    startTraining(text, wpm) {
+        if (this.isTraining) return;
+        
+        this.currentText = this.customText || text;
+        this.wpm = wpm;
+        
+        // Create phrases (6 words each)
+        const words = this.currentText.replace(/\s+/g, ' ').trim().split(' ');
+        this.phrases = [];
+        
+        for (let i = 0; i < words.length; i += 6) {
+            const phrase = words.slice(i, i + 6).join(' ');
+            this.phrases.push(phrase);
+        }
+        
+        console.log(`Created ${this.phrases.length} phrases for training`);
+        
+        this.currentPhraseIndex = 0;
+        this.isTraining = true;
+        this.isPaused = false;
+        
+        this.updateDisplay();
+        this.startPhraseAnimation();
+    }
+
+    updateDisplay() {
+        const currentPhraseElement = document.getElementById('current-phrase');
+        const totalPhrasesElement = document.getElementById('total-phrases');
+        const currentPhraseIndexElement = document.getElementById('current-phrase-index');
+        const progressFillElement = document.getElementById('phrase-progress-fill');
+        
+        if (currentPhraseElement && this.phrases[this.currentPhraseIndex]) {
+            currentPhraseElement.textContent = this.phrases[this.currentPhraseIndex];
+        }
+        
+        if (totalPhrasesElement) {
+            totalPhrasesElement.textContent = this.phrases.length;
+        }
+        
+        if (currentPhraseIndexElement) {
+            currentPhraseIndexElement.textContent = this.currentPhraseIndex + 1;
+        }
+        
+        if (progressFillElement) {
+            const progress = ((this.currentPhraseIndex + 1) / this.phrases.length) * 100;
+            progressFillElement.style.width = `${progress}%`;
+        }
+    }
+
+    startPhraseAnimation() {
+        if (!this.isTraining || this.isPaused) return;
+        
+        // Calculate delay based on WPM (6 words per phrase)
+        const wordsPerPhrase = 6;
+        const delayMs = (60 * 1000 * wordsPerPhrase) / this.wpm;
+        
+        this.intervalId = setTimeout(() => {
+            if (this.isTraining && !this.isPaused) {
+                this.currentPhraseIndex++;
+                
+                if (this.currentPhraseIndex >= this.phrases.length) {
+                    this.stopTraining();
+                    return;
+                }
+                
+                this.updateDisplay();
+                this.startPhraseAnimation();
+            }
+        }, delayMs);
+    }
+
+    pauseTraining() {
+        this.isPaused = true;
+        if (this.intervalId) {
+            clearTimeout(this.intervalId);
+            this.intervalId = null;
+        }
+        console.log('Phrases training paused');
+    }
+
+    resumeTraining() {
+        this.isPaused = false;
+        this.startPhraseAnimation();
+        console.log('Phrases training resumed');
+    }
+
+    stopTraining() {
+        this.isTraining = false;
+        this.isPaused = false;
+        if (this.intervalId) {
+            clearTimeout(this.intervalId);
+            this.intervalId = null;
+        }
+        console.log('Phrases training stopped');
+    }
+
+    updateSpeed(newWpm) {
+        this.wpm = newWpm;
+        console.log('Phrases trainer speed updated to:', newWpm, 'WPM');
+    }
+
+    getCurrentWordIndex() {
+        return this.currentPhraseIndex * 6;
+    }
+
+    getText() {
+        return this.currentText;
+    }
+}
+
 // Single Line Trainer Class (similar to word-by-word but for lines)
 class SingleLineTrainer {
     constructor() {
@@ -195,10 +331,15 @@ class TrainingZone {
         this.baselineWPM = 0;
         this.customText = null;
         this.isInitialized = false;
-        this.currentMode = 'line-by-line';
+        this.currentMode = 'word-by-word';
         this.currentLineViewMode = 'full-text';
         this.wordTrainer = null;
+        this.phrasesTrainer = null;
         this.singleLineTrainer = null;
+        this.isStartingUp = false; // Flag to track countdown process
+        this.isRamping = false; // Flag to track speed ramping
+        this.targetWPM = 250; // Target WPM after ramping
+        this.currentRampWPM = 250; // Current ramped WPM
     }
 
     // Initialize training zone
@@ -233,6 +374,11 @@ class TrainingZone {
                 console.log('Single line trainer initialized:', !!this.singleLineTrainer);
                 
                 console.log('TrainingZone initialization complete');
+                
+                // Schedule a refresh of the current text display after app is fully ready
+                setTimeout(() => {
+                    this.refreshCurrentTextDisplay();
+                }, 500);
             }, 100);
             
         } catch (error) {
@@ -293,32 +439,102 @@ class TrainingZone {
             console.error('Speed controls not found - speedSlider:', !!speedSlider, 'speedValue:', !!speedValue);
         }
         
-        // Training buttons
+        // Start training button
+        const startTrainingBtn = document.getElementById('start-training');
+        if (startTrainingBtn) {
+            startTrainingBtn.addEventListener('click', () => {
+                console.log('Start training button clicked');
+                this.startTraining();
+            });
+            console.log('Start training button connected');
+        } else {
+            console.error('Start training button not found');
+        }
+        
+        // Set up pause and stop buttons with retry mechanism
+        this.setupPauseStopButtons();
+        
+        // Text size slider
+        const sizeSlider = document.getElementById('text-size-slider');
+        const sizeValue = document.getElementById('size-value');
+        
+        if (sizeSlider && sizeValue) {
+            // Initialize with default value
+            sizeSlider.value = 16;
+            sizeValue.textContent = 16;
+            
+            sizeSlider.oninput = () => {
+                const fontSize = parseInt(sizeSlider.value);
+                sizeValue.textContent = fontSize;
+                console.log('Text size updated to:', fontSize + 'px');
+                
+                // Apply the text size directly via CSS custom property
+                const trainingDisplay = document.querySelector('.training-display');
+                const testContent = document.getElementById('test-content');
+                
+                if (trainingDisplay) {
+                    trainingDisplay.style.setProperty('--dynamic-font-size', fontSize + 'px');
+                }
+                if (testContent) {
+                    testContent.style.setProperty('--dynamic-font-size', fontSize + 'px');
+                }
+            };
+        } else {
+            console.error('Size controls not found - sizeSlider:', !!sizeSlider, 'sizeValue:', !!sizeValue);
+        }
+        
+        // Training start button
         const startBtn = document.getElementById('start-training');
-        const pauseBtn = document.getElementById('pause-training');
-        const stopBtn = document.getElementById('stop-training');
         
         if (startBtn) {
             startBtn.onclick = () => {
                 console.log('Start training button clicked');
                 this.startTraining();
-            };
-        }
-        if (pauseBtn) {
-            pauseBtn.onclick = () => {
-                console.log('Pause training button clicked');
-                this.pauseTraining();
-            };
-        }
-        if (stopBtn) {
-            stopBtn.onclick = () => {
-                console.log('Stop training button clicked');
-                this.stopTraining();
+                // Auto-collapse training panel when starting training
+                if (typeof collapseTrainingPanel === 'function') {
+                    collapseTrainingPanel();
+                }
             };
         }
         
         // Initial vs baseline update
         this.updateVsBaseline();
+    }
+
+    // Setup pause/stop buttons with retry mechanism
+    setupPauseStopButtons() {
+        const trySetupButtons = () => {
+            const pauseTrainingBtn = document.getElementById('pause-training');
+            const stopTrainingBtn = document.getElementById('stop-training');
+            
+            if (pauseTrainingBtn && !pauseTrainingBtn.hasAttribute('data-listener-attached')) {
+                pauseTrainingBtn.addEventListener('click', () => {
+                    console.log('Pause/Resume training button clicked');
+                    if (this.isPaused) {
+                        this.resumeTraining();
+                    } else {
+                        this.pauseTraining();
+                    }
+                });
+                pauseTrainingBtn.setAttribute('data-listener-attached', 'true');
+                console.log('Pause/Resume training button connected');
+            }
+            
+            if (stopTrainingBtn && !stopTrainingBtn.hasAttribute('data-listener-attached')) {
+                stopTrainingBtn.addEventListener('click', () => {
+                    console.log('Stop training button clicked');
+                    this.stopTraining();
+                });
+                stopTrainingBtn.setAttribute('data-listener-attached', 'true');
+                console.log('Stop training button connected');
+            }
+        };
+        
+        // Try immediately
+        trySetupButtons();
+        
+        // Also try after a short delay to catch any DOM updates
+        setTimeout(trySetupButtons, 500);
     }
 
     // Update vs baseline display
@@ -348,11 +564,63 @@ class TrainingZone {
     loadTrainingText() {
         // Use custom text if available, otherwise use sample text
         let text;
+        let selectedText = null;
         if (this.customText) {
             text = this.customText;
+            selectedText = { title: 'Custom Text', content: text };
         } else {
-            const sampleTexts = storage.getSampleTexts();
-            text = sampleTexts[0].content; // Use first sample text
+            // Get the default text ID and load that text
+            let defaultTextId = 'sample-0'; // fallback
+            
+            try {
+                // Try to get the default text ID from localStorage directly
+                defaultTextId = localStorage.getItem('flowread_default_text_id') || 'sample-0';
+            } catch (error) {
+                console.warn('Could not access default text preference:', error);
+            }
+            
+            if (defaultTextId.startsWith('sample-')) {
+                const sampleIndex = parseInt(defaultTextId.replace('sample-', ''));
+                const sampleTexts = storage.getSampleTexts();
+                const selectedSample = sampleTexts[sampleIndex] || sampleTexts[0];
+                text = selectedSample.content;
+                selectedText = { title: selectedSample.title, content: text };
+            } else if (defaultTextId.startsWith('saved-')) {
+                const savedId = defaultTextId.replace('saved-', '');
+                let savedText = null;
+                
+                try {
+                    // Try to get saved text from localStorage directly
+                    const savedTexts = JSON.parse(localStorage.getItem('saved-training-texts') || '[]');
+                    savedText = savedTexts.find(text => text.id === savedId);
+                } catch (error) {
+                    console.warn('Could not access saved texts:', error);
+                }
+                
+                if (savedText) {
+                    text = savedText.content;
+                    selectedText = { title: savedText.title, content: text };
+                } else {
+                    // Fallback to first sample
+                    const sampleTexts = storage.getSampleTexts();
+                    text = sampleTexts[0].content;
+                    selectedText = { title: sampleTexts[0].title, content: text };
+                }
+            } else {
+                // Fallback to first sample
+                const sampleTexts = storage.getSampleTexts();
+                text = sampleTexts[0].content;
+                selectedText = { title: sampleTexts[0].title, content: text };
+            }
+        }
+        
+        // Update the current text display in the UI
+        try {
+            if (app && app.textManager && app.textManager.updateCurrentTextDisplay) {
+                app.textManager.updateCurrentTextDisplay(selectedText);
+            }
+        } catch (error) {
+            console.warn('Could not update text display:', error);
         }
         
         const textContainer = document.getElementById('training-text');
@@ -416,16 +684,12 @@ class TrainingZone {
 
     // Start training (handles both modes)
     async startTraining() {
-        if (this.isTraining) return;
+        if (this.isTraining || this.isStartingUp) return;
         
         console.log(`Starting ${this.currentMode} training...`);
         
-        // Route to appropriate training method
-        if (this.currentMode === 'word-by-word') {
-            return this.startWordTraining();
-        } else {
-            return this.startLineTraining();
-        }
+        // Use smooth countdown start sequence
+        return this.startWithCountdown();
     }
 
     // Start line-by-line training
@@ -521,6 +785,52 @@ class TrainingZone {
         
         // Start word trainer
         this.wordTrainer.startTraining(text, this.settings.wpm);
+        
+        // Update live stats
+        this.startLiveStats();
+    }
+
+    // Start phrases training
+    async startPhrasesTraining() {
+        if (this.isTraining) return;
+        
+        console.log('Starting phrases training...');
+        
+        // Ensure phrases trainer is ready
+        this.ensurePhrasesTrainer();
+        
+        if (!this.phrasesTrainer) {
+            console.error('Failed to initialize phrases trainer');
+            return;
+        }
+        
+        // Create session
+        this.session = new ReadingSession();
+        let text;
+        if (this.customText) {
+            text = this.customText;
+        } else {
+            const sampleTexts = storage.getSampleTexts();
+            text = sampleTexts[0].content;
+        }
+        
+        await this.session.init(text, 'training', {
+            wpmTarget: this.settings.wpm,
+            title: 'Phrases Speed Training'
+        });
+        
+        this.isTraining = true;
+        this.isPaused = false;
+        this.startTime = Date.now();
+        this.pausedTime = 0;
+        
+        console.log(`Phrases training started at ${this.settings.wpm} WPM`);
+        
+        // Update UI
+        this.updateTrainingButtons(true);
+        
+        // Start phrases trainer
+        this.phrasesTrainer.startTraining(text, this.settings.wpm);
         
         // Update live stats
         this.startLiveStats();
@@ -674,6 +984,9 @@ class TrainingZone {
         if (this.currentMode === 'word-by-word') {
             this.ensureWordTrainer();
             if (this.wordTrainer) this.wordTrainer.pauseTraining();
+        } else if (this.currentMode === 'phrases') {
+            this.ensurePhrasesTrainer();
+            if (this.phrasesTrainer) this.phrasesTrainer.pauseTraining();
         } else if (this.currentMode === 'line-by-line' && this.currentLineViewMode === 'single-line') {
             this.ensureSingleLineTrainer();
             if (this.singleLineTrainer) this.singleLineTrainer.pauseTraining();
@@ -692,6 +1005,9 @@ class TrainingZone {
             clearInterval(this.statsInterval);
         }
         
+        // Update pause button to show "Resume"
+        this.updatePauseButtonState(true);
+        
         this.updateTrainingButtons(false, true);
     }
 
@@ -708,6 +1024,9 @@ class TrainingZone {
         if (this.currentMode === 'word-by-word') {
             this.ensureWordTrainer();
             if (this.wordTrainer) this.wordTrainer.resumeTraining();
+        } else if (this.currentMode === 'phrases') {
+            this.ensurePhrasesTrainer();
+            if (this.phrasesTrainer) this.phrasesTrainer.resumeTraining();
         } else if (this.currentMode === 'line-by-line' && this.currentLineViewMode === 'single-line') {
             this.ensureSingleLineTrainer();
             if (this.singleLineTrainer) this.singleLineTrainer.resumeTraining();
@@ -723,6 +1042,9 @@ class TrainingZone {
         
         // Resume stats
         this.startLiveStats();
+        
+        // Update pause button to show "Pause"
+        this.updatePauseButtonState(false);
         
         this.updateTrainingButtons(true);
     }
@@ -743,6 +1065,13 @@ class TrainingZone {
                 this.wordTrainer.stopTraining();
                 wordsRead = this.wordTrainer.getCurrentWordIndex();
                 finalText = this.wordTrainer.getText();
+            }
+        } else if (this.currentMode === 'phrases') {
+            this.ensurePhrasesTrainer();
+            if (this.phrasesTrainer) {
+                this.phrasesTrainer.stopTraining();
+                wordsRead = this.phrasesTrainer.getCurrentWordIndex();
+                finalText = this.phrasesTrainer.getText();
             }
         } else if (this.currentMode === 'line-by-line' && this.currentLineViewMode === 'single-line') {
             this.ensureSingleLineTrainer();
@@ -779,14 +1108,95 @@ class TrainingZone {
                 wordCount: wordsRead,
                 durationMs: elapsed,
                 wpm: finalWPM,
-                technique: this.currentMode === 'word-by-word' ? 'word-pacer' : 'line-pacer'
+                technique: this.currentMode === 'word-by-word' ? 'word-pacer' : this.currentMode === 'phrases' ? 'phrases-pacer' : 'line-pacer'
             });
         }
         
         // Update UI
         this.updateTrainingButtons(false);
         
+        // Reset pause button to pause state
+        this.updatePauseButtonState(false);
+        
         console.log(`Training completed: ${wordsRead} words in ${(elapsed/1000).toFixed(1)}s at ${finalWPM} WPM`);
+        
+        // Reset training state - scroll to top and expand controls
+        this.resetTrainingView();
+    }
+    
+    // Reset training view to initial state
+    resetTrainingView() {
+        // Remove any active highlighting and hide the pacer completely
+        const pacer = document.getElementById('line-pacer');
+        if (pacer) {
+            pacer.classList.remove('active');
+            pacer.style.top = '0px';
+            pacer.style.opacity = '0';
+        }
+        
+        // Clear any word highlights
+        const currentWord = document.getElementById('current-word');
+        if (currentWord) {
+            currentWord.textContent = '';
+        }
+        
+        // Clear any phrase highlights
+        const currentPhrase = document.getElementById('current-phrase');
+        if (currentPhrase) {
+            currentPhrase.textContent = '';
+        }
+        
+        // Remove any countdown overlays
+        const countdownOverlay = document.getElementById('training-countdown-overlay');
+        if (countdownOverlay) {
+            countdownOverlay.remove();
+        }
+        
+        // Remove glow effects from all training areas
+        const trainingAreas = [
+            document.getElementById('training-text'),
+            document.getElementById('word-training-text'),
+            document.getElementById('phrases-training-text')
+        ];
+        trainingAreas.forEach(area => {
+            if (area) {
+                area.classList.remove('training-area-glow');
+            }
+        });
+        
+        // Reset control bar to initial state
+        this.resetControlBarToInitialState();
+        
+        // Reset startup flag and ramping state
+        this.isStartingUp = false;
+        this.isRamping = false;
+        
+        // Reset speed slider to original value
+        if (this.settings && this.settings.wpm) {
+            this.updateSpeedSliderVisual(this.settings.wpm);
+        }
+        
+        // Reset progress bars
+        const progressFill = document.getElementById('word-progress-fill');
+        if (progressFill) {
+            progressFill.style.width = '0%';
+        }
+        
+        const phraseProgressFill = document.getElementById('phrase-progress-fill');
+        if (phraseProgressFill) {
+            phraseProgressFill.style.width = '0%';
+        }
+        
+        // Scroll to top of page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Expand training controls panel
+        const trainingControlsPanel = document.getElementById('training-panel');
+        if (trainingControlsPanel && trainingControlsPanel.classList.contains('collapsed')) {
+            trainingControlsPanel.classList.remove('collapsed');
+        }
+        
+        console.log('Training view reset to initial state');
     }
 
     // Complete training (reached end of text)
@@ -794,37 +1204,22 @@ class TrainingZone {
         this.stopTraining();
     }
 
-    // Update training button states
+    // Update training button states (updated for new persistent control bar)
     updateTrainingButtons(isRunning, isPaused = false) {
-        const startBtn = document.getElementById('start-training');
-        const pauseBtn = document.getElementById('pause-training');
-        const stopBtn = document.getElementById('stop-training');
+        // This method is now handled by the persistent control bar transformation
+        // We don't need to modify button visibility anymore since we use seamless transformation
         
-        if (startBtn) {
-            startBtn.style.display = isRunning ? 'none' : 'inline-block';
-            if (!isRunning) {
-                const startBtnText = startBtn.querySelector('.btn-text');
-                if (startBtnText) {
-                    startBtnText.textContent = '▶️ START';
-                }
-            }
+        // Only update the old training control bar (hide it always)
+        const oldControlBar = document.getElementById('training-control-bar');
+        if (oldControlBar) {
+            oldControlBar.style.display = 'none';
         }
         
-        if (pauseBtn) {
-            const pauseBtnText = pauseBtn.querySelector('.btn-text');
-            if (isPaused) {
-                if (pauseBtnText) pauseBtnText.textContent = '▶️ Resume';
-                pauseBtn.onclick = () => this.resumeTraining();
-            } else {
-                if (pauseBtnText) pauseBtnText.textContent = '⏸️ Pause';
-                pauseBtn.onclick = () => this.pauseTraining();
-            }
-            pauseBtn.style.display = isRunning || isPaused ? 'inline-block' : 'none';
-        }
+        // The new persistent control bar handles its own state through transformation methods
+        console.log('Training button states updated - isRunning:', isRunning, 'isPaused:', isPaused);
         
-        if (stopBtn) {
-            stopBtn.style.display = isRunning || isPaused ? 'inline-block' : 'none';
-        }
+        // Update training control bar (old system)
+        this.updateControlBar(isRunning, isPaused);
     }
 
     // Update speed settings based on performance
@@ -854,6 +1249,21 @@ class TrainingZone {
         }
     }
 
+    // Update pause button state between pause and resume
+    updatePauseButtonState(isPaused) {
+        const pauseButton = document.getElementById('pause-training');
+        if (!pauseButton) return;
+        
+        const btnText = pauseButton.querySelector('.btn-text');
+        if (!btnText) return;
+        
+        if (isPaused) {
+            btnText.textContent = '▶ Resume';
+        } else {
+            btnText.textContent = '⏸ Pause';
+        }
+    }
+
     // Update speed for active training sessions
     updateActiveTrainingSpeed() {
         console.log('Updating active training speed to:', this.settings.wpm, 'WPM');
@@ -862,6 +1272,9 @@ class TrainingZone {
             if (this.currentMode === 'word-by-word' && this.wordTrainer) {
                 console.log('Updating word trainer speed');
                 this.wordTrainer.updateSpeed(this.settings.wpm);
+            } else if (this.currentMode === 'phrases' && this.phrasesTrainer) {
+                console.log('Updating phrases trainer speed');
+                this.phrasesTrainer.updateSpeed(this.settings.wpm);
             } else if (this.currentMode === 'line-by-line' && this.currentLineViewMode === 'single-line' && this.singleLineTrainer) {
                 console.log('Updating single line trainer speed');
                 this.singleLineTrainer.updateSpeed(this.settings.wpm);
@@ -870,10 +1283,119 @@ class TrainingZone {
         }
     }
 
+    // Update training control bar (disabled - using new persistent control bar)
+    updateControlBar(isRunning, isPaused = false) {
+        // Hide the old training control bar completely
+        const oldControlBar = document.getElementById('training-control-bar');
+        if (oldControlBar) {
+            oldControlBar.style.display = 'none';
+        }
+        
+        // Remove padding class from training display since we're using persistent control bar
+        const trainingDisplay = document.querySelector('.training-display');
+        if (trainingDisplay) {
+            trainingDisplay.classList.remove('has-control-bar');
+        }
+        
+        console.log('Old control bar disabled - using persistent control bar instead');
+    }
+
+    // Scroll to top of training area
+    scrollToTop() {
+        const trainingText = document.getElementById('training-text');
+        const wordTrainingText = document.getElementById('word-training-text');
+        const phrasesTrainingText = document.getElementById('phrases-training-text');
+        
+        // Scroll to the appropriate training area based on current mode
+        let targetElement = trainingText;
+        if (this.currentMode === 'word-by-word') {
+            targetElement = wordTrainingText;
+        } else if (this.currentMode === 'phrases') {
+            targetElement = phrasesTrainingText;
+        }
+        
+        if (targetElement) {
+            targetElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        } else {
+            // Fallback to training display
+            const trainingDisplay = document.querySelector('.training-display');
+            if (trainingDisplay) {
+                trainingDisplay.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+        }
+    }
+
+    // Refresh current text display (called after app is fully initialized)
+    refreshCurrentTextDisplay() {
+        try {
+            if (this.customText) {
+                const selectedText = { title: 'Custom Text', content: this.customText };
+                if (app && app.textManager && app.textManager.updateCurrentTextDisplay) {
+                    app.textManager.updateCurrentTextDisplay(selectedText);
+                }
+            } else {
+                // Determine which default text is being used
+                let defaultTextId = 'sample-0';
+                try {
+                    defaultTextId = localStorage.getItem('flowread_default_text_id') || 'sample-0';
+                } catch (error) {
+                    console.warn('Could not access default text preference:', error);
+                }
+                
+                let selectedText = null;
+                if (defaultTextId.startsWith('sample-')) {
+                    const sampleIndex = parseInt(defaultTextId.replace('sample-', ''));
+                    const sampleTexts = storage.getSampleTexts();
+                    const selectedSample = sampleTexts[sampleIndex] || sampleTexts[0];
+                    selectedText = { title: selectedSample.title, content: selectedSample.content };
+                } else if (defaultTextId.startsWith('saved-')) {
+                    const savedId = defaultTextId.replace('saved-', '');
+                    try {
+                        const savedTexts = JSON.parse(localStorage.getItem('saved-training-texts') || '[]');
+                        const savedText = savedTexts.find(text => text.id === savedId);
+                        if (savedText) {
+                            selectedText = { title: savedText.title, content: savedText.content };
+                        }
+                    } catch (error) {
+                        console.warn('Could not access saved texts:', error);
+                    }
+                }
+                
+                // Fallback to first sample if nothing found
+                if (!selectedText) {
+                    const sampleTexts = storage.getSampleTexts();
+                    selectedText = { title: sampleTexts[0].title, content: sampleTexts[0].content };
+                }
+                
+                if (app && app.textManager && app.textManager.updateCurrentTextDisplay) {
+                    app.textManager.updateCurrentTextDisplay(selectedText);
+                }
+            }
+        } catch (error) {
+            console.warn('Could not refresh current text display:', error);
+        }
+    }
+
     // Set custom text for training
     setCustomText(text) {
         this.customText = text;
         console.log('Custom text set for training:', text.substring(0, 50) + '...');
+        
+        // Update the current text display in the UI
+        try {
+            if (app && app.textManager && app.textManager.updateCurrentTextDisplay) {
+                const selectedText = { title: 'Custom Text', content: text };
+                app.textManager.updateCurrentTextDisplay(selectedText);
+            }
+        } catch (error) {
+            console.warn('Could not update text display:', error);
+        }
         
         // Reload training text with the custom text if training zone is initialized
         if (this.isInitialized && document.getElementById('training-text')) {
@@ -883,9 +1405,12 @@ class TrainingZone {
             console.log('Training zone not yet initialized, custom text will load when training starts');
         }
         
-        // Also set text for word trainer and single line trainer if they exist
+        // Also set text for word trainer, phrases trainer and single line trainer if they exist
         if (this.wordTrainer) {
             this.wordTrainer.setCustomText(text);
+        }
+        if (this.phrasesTrainer) {
+            this.phrasesTrainer.setCustomText(text);
         }
         if (this.singleLineTrainer) {
             console.log('Setting custom text for single line trainer');
@@ -901,10 +1426,15 @@ class TrainingZone {
         // Ensure word trainer is ready when switching to word mode
         if (mode === 'word-by-word') {
             this.ensureWordTrainer();
+        } else if (mode === 'phrases') {
+            this.ensurePhrasesTrainer();
         }
         
         if (this.wordTrainer) {
             this.wordTrainer.setMode(mode);
+        }
+        if (this.phrasesTrainer) {
+            this.phrasesTrainer.setMode(mode);
         }
     }
 
@@ -936,6 +1466,333 @@ class TrainingZone {
             console.log('Creating word trainer on demand...');
             this.wordTrainer = new WordByWordTrainer();
             this.wordTrainer.init();
+        }
+    }
+
+    ensurePhrasesTrainer() {
+        if (!this.phrasesTrainer) {
+            console.log('Creating phrases trainer on demand...');
+            this.phrasesTrainer = new PhrasesTrainer();
+            this.phrasesTrainer.init();
+        }
+    }
+
+    // Get the active training area element based on current mode
+    getActiveTrainingArea() {
+        switch (this.currentMode) {
+            case 'word-by-word':
+                return document.getElementById('word-training-text');
+            case 'phrases':
+                return document.getElementById('phrases-training-text');
+            case 'line-by-line':
+            default:
+                return document.getElementById('training-text');
+        }
+    }
+
+    // Create countdown overlay on the training area
+    createCountdownOverlay(trainingArea) {
+        const overlay = document.createElement('div');
+        overlay.className = 'training-countdown-overlay';
+        overlay.id = 'training-countdown-overlay';
+        
+        const countdownNumber = document.createElement('div');
+        countdownNumber.className = 'countdown-number';
+        countdownNumber.textContent = '3';
+        
+        overlay.appendChild(countdownNumber);
+        trainingArea.appendChild(overlay);
+        
+        return { overlay, countdownNumber };
+    }
+
+    // Transform control bar to training mode
+    transformControlBarToTrainingMode() {
+        const controlBar = document.getElementById('persistent-control-bar');
+        const startButton = document.getElementById('start-training');
+        const pauseButton = document.getElementById('pause-training');
+        const stopButton = document.getElementById('stop-training');
+        
+        if (controlBar) {
+            controlBar.classList.add('training-mode');
+        }
+        
+        // Hide start button and show pause/stop buttons with smooth animation
+        if (startButton) {
+            startButton.classList.add('hiding');
+            setTimeout(() => {
+                startButton.style.display = 'none';
+                if (pauseButton && stopButton) {
+                    pauseButton.style.display = 'flex';
+                    stopButton.style.display = 'flex';
+                    // Trigger reflow
+                    pauseButton.offsetHeight;
+                    stopButton.offsetHeight;
+                    // Add showing class for animation
+                    pauseButton.classList.add('showing');
+                    stopButton.classList.add('showing');
+                }
+            }, 150);
+        }
+    }
+
+    // Reset control bar to initial state
+    resetControlBarToInitialState() {
+        const controlBar = document.getElementById('persistent-control-bar');
+        const startButton = document.getElementById('start-training');
+        const pauseButton = document.getElementById('pause-training');
+        const stopButton = document.getElementById('stop-training');
+        
+        if (controlBar) {
+            controlBar.classList.remove('training-mode');
+        }
+        
+        // Hide pause/stop buttons and show start button
+        if (pauseButton && stopButton) {
+            pauseButton.classList.remove('showing');
+            stopButton.classList.remove('showing');
+            pauseButton.classList.add('hiding');
+            stopButton.classList.add('hiding');
+            
+            setTimeout(() => {
+                pauseButton.style.display = 'none';
+                stopButton.style.display = 'none';
+                if (startButton) {
+                    startButton.style.display = 'flex';
+                    startButton.classList.remove('hiding');
+                    startButton.classList.add('showing');
+                    // Clean up classes
+                    setTimeout(() => {
+                        startButton.classList.remove('showing');
+                    }, 300);
+                }
+            }, 150);
+        }
+        
+        // Reset training controls container
+        const trainingControlsContainer = document.querySelector('.training-controls-container');
+        if (trainingControlsContainer) {
+            trainingControlsContainer.classList.remove('collapsed');
+        }
+    }
+
+    // Smooth start sequence with countdown
+    async startWithCountdown() {
+        console.log('Starting training with smooth countdown...');
+        
+        try {
+            // Set startup flag to prevent multiple starts
+            this.isStartingUp = true;
+        
+            // 1. Transform the control bar to training mode first (before countdown)
+            this.transformControlBarToTrainingMode();
+        
+            // 2. Collapse training controls smoothly
+            const trainingControlsContainer = document.querySelector('.training-controls-container');
+            if (trainingControlsContainer) {
+                trainingControlsContainer.classList.add('collapsed');
+            }
+        
+        // 3. Wait for collapse animation
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // 4. Get active training area and add glow
+        const trainingArea = this.getActiveTrainingArea();
+        if (trainingArea) {
+            trainingArea.classList.add('training-area-glow');
+            
+            // 5. Create and show countdown overlay
+            const { overlay, countdownNumber } = this.createCountdownOverlay(trainingArea);
+            
+            // 6. Countdown sequence
+            const countdownSequence = ['3', '2', '1', 'GO!'];
+            for (let i = 0; i < countdownSequence.length; i++) {
+                countdownNumber.textContent = countdownSequence[i];
+                countdownNumber.style.animation = 'none';
+                // Trigger reflow to restart animation
+                countdownNumber.offsetHeight;
+                countdownNumber.style.animation = 'countdownPulse 0.8s ease-in-out';
+                
+                // Wait for animation (shorter delay for GO!)
+                const delay = countdownSequence[i] === 'GO!' ? 500 : 1000;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+            
+            // 7. Remove countdown overlay
+            overlay.remove();
+            
+            // 8. Start actual training with speed ramping
+            console.log('About to start actual training, current mode:', this.currentMode);
+            await this.startActualTrainingWithRamping();
+            
+            // 9. Remove glow after training starts
+            setTimeout(() => {
+                trainingArea.classList.remove('training-area-glow');
+            }, 1000);
+        }
+        
+        // 10. Clear startup flag (don't reset button state - it should stay transformed!)
+        this.isStartingUp = false;
+        } catch (error) {
+            console.error('Error during training start countdown:', error);
+            
+            // Ensure we clean up on error
+            this.isStartingUp = false;
+            
+            // Remove any leftover UI elements
+            const countdownOverlay = document.getElementById('training-countdown-overlay');
+            if (countdownOverlay) {
+                countdownOverlay.remove();
+            }
+            
+            // Reset UI state
+            this.resetTrainingView();
+            
+            // Show error to user
+            if (window.app && typeof app.showError === 'function') {
+                app.showError('Failed to start training. Please try again.');
+            }
+        }
+    }
+
+    // Start speed ramping from 25% to 100% over 5 seconds
+    startSpeedRamping() {
+        this.targetWPM = this.settings.wpm;
+        this.currentRampWPM = Math.round(this.targetWPM * 0.25); // Start at 25%
+        this.isRamping = true;
+        
+        console.log(`Starting speed ramp from ${this.currentRampWPM} to ${this.targetWPM} WPM`);
+        
+        const rampDuration = 5000; // 5 seconds
+        const rampSteps = 50; // Smooth animation
+        const stepDuration = rampDuration / rampSteps;
+        const wpmIncrement = (this.targetWPM - this.currentRampWPM) / rampSteps;
+        
+        let currentStep = 0;
+        
+        const rampInterval = setInterval(() => {
+            if (!this.isTraining || !this.isRamping) {
+                clearInterval(rampInterval);
+                return;
+            }
+            
+            currentStep++;
+            this.currentRampWPM = Math.round(this.targetWPM * 0.25 + (wpmIncrement * currentStep));
+            
+            // Update speed slider visual
+            this.updateSpeedSliderVisual(this.currentRampWPM);
+            
+            // Update active training speed
+            this.updateActiveTrainingRampSpeed(this.currentRampWPM);
+            
+            if (currentStep >= rampSteps) {
+                this.currentRampWPM = this.targetWPM;
+                this.isRamping = false;
+                clearInterval(rampInterval);
+                console.log('Speed ramping completed at', this.targetWPM, 'WPM');
+            }
+        }, stepDuration);
+    }
+
+    // Update speed slider visual during ramping
+    updateSpeedSliderVisual(wpm) {
+        const speedSlider = document.getElementById('training-speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        
+        if (speedSlider) {
+            speedSlider.value = wpm;
+        }
+        if (speedValue) {
+            speedValue.textContent = wpm;
+        }
+    }
+
+    // Update active training speed during ramping
+    updateActiveTrainingRampSpeed(wpm) {
+        if (this.isTraining) {
+            if (this.currentMode === 'word-by-word' && this.wordTrainer) {
+                this.wordTrainer.updateSpeed(wpm);
+            } else if (this.currentMode === 'phrases' && this.phrasesTrainer) {
+                this.phrasesTrainer.updateSpeed(wpm);
+            } else if (this.currentMode === 'line-by-line' && this.currentLineViewMode === 'single-line' && this.singleLineTrainer) {
+                this.singleLineTrainer.updateSpeed(wpm);
+            }
+        }
+    }
+
+    // Start actual training with speed ramping
+    async startActualTrainingWithRamping() {
+        if (this.isTraining) {
+            console.log('Training already running, skipping');
+            return;
+        }
+        
+        console.log(`Starting ${this.currentMode} training with speed ramping...`);
+        console.log('Is initialized:', this.isInitialized);
+        console.log('Lines count:', this.lines ? this.lines.length : 'no lines');
+        
+        // Ensure we have text loaded
+        if (!this.lines || this.lines.length === 0) {
+            console.log('No text loaded, loading training text first...');
+            this.loadTrainingText();
+        }
+        
+        // Start training at 25% speed first
+        const originalWPM = this.settings.wpm;
+        this.settings.wpm = Math.round(originalWPM * 0.25);
+        
+        // Route to appropriate training method
+        console.log('Routing to training method for mode:', this.currentMode);
+        if (this.currentMode === 'word-by-word') {
+            console.log('Starting word training...');
+            await this.startWordTraining();
+        } else if (this.currentMode === 'phrases') {
+            console.log('Starting phrases training...');
+            await this.startPhrasesTraining();
+        } else {
+            console.log('Starting line training...');
+            await this.startLineTraining();
+        }
+        
+        // Restore original WPM setting
+        this.settings.wpm = originalWPM;
+        
+        // Start speed ramping after a brief delay
+        setTimeout(() => {
+            if (this.isTraining) {
+                this.startSpeedRamping();
+            }
+        }, 1000);
+    }
+
+    // Original start method renamed to startActualTraining
+    async startActualTraining() {
+        if (this.isTraining) {
+            console.log('Training already running, skipping');
+            return;
+        }
+        
+        console.log(`Starting ${this.currentMode} training...`);
+        console.log('Is initialized:', this.isInitialized);
+        console.log('Lines count:', this.lines ? this.lines.length : 'no lines');
+        
+        // Ensure we have text loaded
+        if (!this.lines || this.lines.length === 0) {
+            console.log('No text loaded, loading training text first...');
+            this.loadTrainingText();
+        }
+        
+        // Route to appropriate training method
+        console.log('Routing to training method for mode:', this.currentMode);
+        if (this.currentMode === 'word-by-word') {
+            console.log('Starting word training...');
+            return this.startWordTraining();
+        } else if (this.currentMode === 'phrases') {
+            console.log('Starting phrases training...');
+            return this.startPhrasesTraining();
+        } else {
+            console.log('Starting line training...');
+            return this.startLineTraining();
         }
     }
 

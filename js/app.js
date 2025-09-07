@@ -9,6 +9,7 @@ class FlowReadApp {
             highContrast: false,
             motionSensitive: false
         };
+        this.textManager = new TextManager();
     }
 
     // Initialize the application
@@ -176,23 +177,6 @@ class FlowReadApp {
         // Assessment screen is handled by AssessmentReader class
     }
 
-    // Initialize training screen
-    async initializeTrainingScreen() {
-        console.log('Initializing training screen...');
-        // Training screen is handled by TrainingZone class
-        if (typeof trainingZone !== 'undefined') {
-            await trainingZone.init();
-            console.log('Training zone initialized from app');
-        } else {
-            console.error('TrainingZone not found!');
-        }
-        
-        // Initialize training mode selection
-        this.currentTrainingMode = 'line-by-line';
-        this.currentLineViewMode = 'full-text';
-        this.currentTextSize = 'medium';
-        this.updateTrainingModeDisplay();
-    }
 
     // Initialize progress screen
     async initializeProgressScreen() {
@@ -220,6 +204,12 @@ class FlowReadApp {
             if (typeof trainingZone !== 'undefined') {
                 await trainingZone.init();
             }
+            
+            // Initialize training settings to match HTML default (word-by-word is active)
+            this.setTrainingMode('word-by-word');
+            this.currentTextSize = 'medium';
+            this.setupTrainingControls();
+            
         } catch (error) {
             console.error('Failed to initialize train screen:', error);
         }
@@ -309,6 +299,14 @@ class FlowReadApp {
             const user = await storage.getUser();
             this.settings = { ...this.settings, ...user.preferences };
             
+            // Load font preference from localStorage
+            const savedFont = localStorage.getItem('flowread_font_type');
+            if (savedFont) {
+                this.settings.fontType = savedFont;
+            } else {
+                this.settings.fontType = 'serif'; // Default to serif
+            }
+            
             // Apply settings
             this.applySettings();
         } catch (error) {
@@ -319,6 +317,11 @@ class FlowReadApp {
     // Apply settings to UI
     applySettings() {
         const body = document.body;
+        
+        // Apply font setting
+        if (this.settings.fontType) {
+            this.toggleFont(this.settings.fontType);
+        }
         
         // Dyslexic font
         if (this.settings.dyslexicFont) {
@@ -411,7 +414,7 @@ class FlowReadApp {
         const textarea = document.getElementById('custom-text');
         if (!textarea) return;
         
-        const text = textarea.value.trim();
+        const text = textarea.value ? String(textarea.value).trim() : '';
         if (!text) {
             this.showError('Please enter some text to read.');
             return;
@@ -458,7 +461,7 @@ class FlowReadApp {
         
         if (!textarea || !wordCountEl || !estimatedTimeEl) return;
         
-        const text = textarea.value.trim();
+        const text = textarea.value ? String(textarea.value).trim() : '';
         const wordCount = text ? textProcessor.countWords(text) : 0;
         
         // Estimate reading time at average speed (250 WPM)
@@ -472,7 +475,7 @@ class FlowReadApp {
         const textarea = document.getElementById('custom-training-text');
         if (!textarea) return;
         
-        const text = textarea.value.trim();
+        const text = textarea.value ? String(textarea.value).trim() : '';
         if (!text) {
             this.showError('Please enter some text for training.');
             return;
@@ -500,153 +503,400 @@ class FlowReadApp {
         }
     }
 
-    // Training mode selection
-    selectTrainingMode(mode) {
-        this.currentTrainingMode = mode;
-        console.log('Selected training mode:', mode);
+    // Setup training controls
+    setupTrainingControls() {
+        try {
+            // Load saved texts into dropdown
+            this.updateTextDropdown();
+            
+            // Setup custom text title and textarea
+            const titleInput = document.getElementById('custom-text-title');
+            const textArea = document.getElementById('custom-training-text');
+            
+            if (titleInput && textArea) {
+                // Auto-generate title placeholder as user types
+                textArea.oninput = () => {
+                    this.updateCustomTextStats();
+                    if (!titleInput.value && textArea.value) {
+                        titleInput.placeholder = this.generateTitleFromContent(textArea.value);
+                    }
+                };
+                
+                titleInput.oninput = () => {
+                    // Clear auto-generated placeholder when user types their own title
+                    if (titleInput.value) {
+                        titleInput.placeholder = 'Enter a title for this text...';
+                    }
+                };
+            }
+        } catch (error) {
+            console.error('Error setting up training controls:', error);
+        }
+    }
+
+    // Update custom text statistics in modal
+    updateCustomTextStats() {
+        const textArea = document.getElementById('custom-training-text');
+        const wordCountEl = document.getElementById('word-count');
+        const estTimeEl = document.getElementById('estimated-time');
         
-        // Update UI
-        this.updateTrainingModeDisplay();
+        if (!textArea || !wordCountEl || !estTimeEl) return;
+        
+        try {
+            const text = textArea.value ? String(textArea.value).trim() : '';
+            const wordCount = text ? textProcessor.countWords(text) : 0;
+            const estMinutes = Math.ceil(wordCount / 300); // Estimate at 300 WPM
+            
+            wordCountEl.textContent = wordCount;
+            estTimeEl.textContent = estMinutes === 1 ? '1 min' : `${estMinutes} min`;
+        } catch (error) {
+            console.error('Error updating text stats:', error);
+            wordCountEl.textContent = '0';
+            estTimeEl.textContent = '0 min';
+        }
+    }
+
+    // Set training mode (unified interface)
+    setTrainingMode(mode) {
+        this.currentTrainingMode = mode;
+        console.log('Training mode set to:', mode);
         
         // Update training zone mode
         if (typeof trainingZone !== 'undefined') {
             trainingZone.setMode(mode);
         }
-    }
-
-    // Set line-by-line view mode
-    setLineViewMode(viewMode) {
-        this.currentLineViewMode = viewMode;
-        console.log('Selected line view mode:', viewMode);
         
-        // Update UI
-        this.updateLineViewModeDisplay();
+        // Update mode button states
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.mode === mode) {
+                btn.classList.add('active');
+            }
+        });
         
-        // Update training zone view mode
-        if (typeof trainingZone !== 'undefined') {
-            trainingZone.setLineViewMode(viewMode);
+        // Show/hide appropriate display areas
+        const lineArea = document.querySelector('.line-by-line-area');
+        const wordArea = document.getElementById('word-training-text');
+        const phrasesArea = document.getElementById('phrases-training-text');
+        
+        if (lineArea) {
+            lineArea.style.display = mode === 'line-by-line' ? 'block' : 'none';
+        }
+        if (wordArea) {
+            wordArea.style.display = mode === 'word-by-word' ? 'block' : 'none';
+        }
+        if (phrasesArea) {
+            phrasesArea.style.display = mode === 'phrases' ? 'block' : 'none';
         }
     }
 
-    // Set text size
-    setTextSize(size) {
-        this.currentTextSize = size;
-        console.log('Selected text size:', size);
+    // Toggle font type (serif/sans)
+    toggleFont(fontType) {
+        console.log('Font changed to:', fontType);
+        
+        // Update button states
+        document.querySelectorAll('.font-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.font === fontType) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Apply font to training areas immediately
+        const trainingAreas = [
+            document.getElementById('training-text'),
+            document.getElementById('word-training-text'),
+            document.getElementById('phrases-training-text'),
+            document.getElementById('test-content')
+        ];
+        
+        const fontFamily = fontType === 'serif' 
+            ? 'Georgia, "Times New Roman", Times, serif'
+            : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+        
+        trainingAreas.forEach(area => {
+            if (area) {
+                area.style.fontFamily = fontFamily;
+            }
+        });
+        
+        // Save preference
+        this.settings.fontType = fontType;
+        localStorage.setItem('flowread_font_type', fontType);
+    }
+
+    // Load sample or saved text
+    loadSampleText(index) {
+        if (!index) return; // Empty selection
+        
+        console.log('Loading text:', index);
+        
+        if (index.startsWith('sample-')) {
+            // Handle sample texts
+            const sampleIndex = parseInt(index.replace('sample-', ''));
+            const sampleTexts = storage.getSampleTexts();
+            const selectedText = sampleTexts[sampleIndex];
+            
+            if (selectedText && typeof trainingZone !== 'undefined') {
+                trainingZone.setCustomText(selectedText.content);
+                console.log('Sample text loaded:', selectedText.title);
+            }
+        } else if (index.startsWith('saved-')) {
+            // Handle saved texts
+            const savedId = index.replace('saved-', '');
+            const savedText = this.getSavedTextById(savedId);
+            
+            if (savedText && typeof trainingZone !== 'undefined') {
+                trainingZone.setCustomText(savedText.content);
+                console.log('Saved text loaded:', savedText.title);
+            }
+        }
+    }
+
+    // Saved texts management
+    getSavedTexts() {
+        try {
+            const saved = localStorage.getItem('flowread_saved_texts');
+            return saved ? JSON.parse(saved) : [];
+        } catch (error) {
+            console.error('Error loading saved texts:', error);
+            return [];
+        }
+    }
+
+    getSavedTextById(id) {
+        const savedTexts = this.getSavedTexts();
+        return savedTexts.find(text => text.id === id);
+    }
+
+    saveText(title, content) {
+        try {
+            // Ensure content is a string and validate input
+            const contentStr = content ? String(content) : '';
+            if (!contentStr || contentStr.trim().length < 10) {
+                throw new Error('Text must be at least 10 characters long');
+            }
+            
+            if (contentStr.length > 50000) {
+                throw new Error('Text is too long (max 50,000 characters)');
+            }
+
+            const savedTexts = this.getSavedTexts();
+            
+            // Check limits
+            if (savedTexts.length >= 20) {
+                throw new Error('Maximum of 20 saved texts allowed');
+            }
+
+            // Generate unique ID and clean title
+            const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+            const cleanTitle = this.sanitizeTitle(title) || this.generateTitleFromContent(contentStr);
+            const finalTitle = this.ensureUniqueTitle(cleanTitle, savedTexts);
+            
+            // Create saved text object
+            const savedText = {
+                id: id,
+                title: finalTitle,
+                content: this.sanitizeContent(contentStr),
+                wordCount: textProcessor.countWords(contentStr),
+                dateCreated: new Date().toISOString()
+            };
+
+            // Save to localStorage
+            savedTexts.push(savedText);
+            localStorage.setItem('flowread_saved_texts', JSON.stringify(savedTexts));
+            
+            // Update dropdown
+            this.updateTextDropdown();
+            
+            return savedText;
+        } catch (error) {
+            console.error('Error saving text:', error);
+            this.showError(error.message);
+            return null;
+        }
+    }
+
+    deleteSavedText(id) {
+        try {
+            const savedTexts = this.getSavedTexts();
+            const filteredTexts = savedTexts.filter(text => text.id !== id);
+            localStorage.setItem('flowread_saved_texts', JSON.stringify(filteredTexts));
+            this.updateTextDropdown();
+            return true;
+        } catch (error) {
+            console.error('Error deleting text:', error);
+            this.showError('Failed to delete text');
+            return false;
+        }
+    }
+
+    sanitizeTitle(title) {
+        if (!title) return '';
+        const titleStr = String(title);
+        return titleStr.trim().replace(/[<>]/g, '').substring(0, 50);
+    }
+
+    sanitizeContent(content) {
+        if (!content) return '';
+        const contentStr = String(content);
+        return contentStr.trim().replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    }
+
+    generateTitleFromContent(content) {
+        if (!content) return 'Untitled Text';
+        const contentStr = String(content);
+        const cleaned = contentStr.trim().replace(/\s+/g, ' ');
+        return cleaned.substring(0, 30).trim() + (cleaned.length > 30 ? '...' : '');
+    }
+
+    ensureUniqueTitle(title, existingTexts) {
+        const baseName = title;
+        let counter = 1;
+        let finalName = baseName;
+        
+        while (existingTexts.some(text => text.title === finalName)) {
+            counter++;
+            finalName = `${baseName} (${counter})`;
+        }
+        
+        return finalName;
+    }
+
+    updateTextDropdown() {
+        const dropdownMenu = document.getElementById('text-dropdown-menu');
+        if (!dropdownMenu) return;
+
+        // Clear all existing items
+        dropdownMenu.innerHTML = '';
+
+        // Get sample texts and convert them to the same format as saved texts
+        const sampleTexts = storage.getSampleTexts();
+        const savedTexts = this.getSavedTexts();
+        
+        // Combine sample texts and saved texts
+        const allTexts = [];
+        
+        // Add sample texts with deletable format
+        sampleTexts.forEach((sampleTextObj, index) => {
+            allTexts.push({
+                id: `sample-${index}`,
+                title: sampleTextObj.title || `Sample Text ${index + 1}`,
+                content: sampleTextObj.content,
+                wordCount: textProcessor.countWords(sampleTextObj.content),
+                isSample: true
+            });
+        });
+        
+        // Add saved texts
+        savedTexts.forEach(text => {
+            allTexts.push({
+                ...text,
+                id: `saved-${text.id}`,
+                isSample: false
+            });
+        });
+
+        // Add all texts to dropdown
+        allTexts.forEach(text => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item saved-text-item';
+            
+            const wordDisplay = text.wordCount > 999 ? 
+                `${(text.wordCount/1000).toFixed(1)}k` : 
+                text.wordCount.toString();
+            
+            item.innerHTML = `
+                <div class="saved-text-info">
+                    <span>${this.escapeHtml(text.title)}</span>
+                    <span class="text-word-count">(${wordDisplay} words)</span>
+                </div>
+                <button class="delete-saved-text" onclick="event.stopPropagation(); deleteSavedTextWithConfirmation('${text.id}', '${this.escapeHtml(text.title)}')">×</button>
+            `;
+            
+            item.onclick = () => this.selectText(text.id);
+            dropdownMenu.appendChild(item);
+        });
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    selectText(value) {
+        this.closeTextDropdown();
+        this.loadSampleText(value);
+        
+        // Update dropdown label
+        const label = document.getElementById('dropdown-label');
+        if (label) {
+            if (value.startsWith('sample-')) {
+                const sampleIndex = parseInt(value.replace('sample-', ''));
+                const sampleTexts = storage.getSampleTexts();
+                const selectedSample = sampleTexts[sampleIndex];
+                if (selectedSample) {
+                    label.textContent = selectedSample.title;
+                } else {
+                    label.textContent = `Sample Text ${sampleIndex + 1}`;
+                }
+            } else if (value.startsWith('saved-')) {
+                const savedId = value.replace('saved-', '');
+                const savedText = this.getSavedTextById(savedId);
+                if (savedText) {
+                    label.textContent = savedText.title;
+                }
+            }
+        }
+    }
+
+    closeTextDropdown() {
+        const dropdown = document.getElementById('text-dropdown-menu');
+        const toggle = document.querySelector('.dropdown-toggle');
+        if (dropdown) {
+            dropdown.classList.remove('show');
+        }
+        if (toggle) {
+            toggle.classList.remove('active');
+        }
+    }
+
+    // Set text size (now accepts pixel value)
+    setTextSize(sizePx) {
+        this.currentTextSize = sizePx;
+        console.log('Selected text size:', sizePx + 'px');
         
         // Update UI
         this.updateTextSizeDisplay();
         
-        // Apply size class to training display
+        // Apply size directly via CSS custom property
         const trainingDisplay = document.querySelector('.training-display');
         if (trainingDisplay) {
-            // Remove existing size classes
-            trainingDisplay.classList.remove('text-size-small', 'text-size-medium', 'text-size-large');
-            // Add new size class
-            trainingDisplay.classList.add(`text-size-${size}`);
+            trainingDisplay.style.setProperty('--dynamic-font-size', sizePx + 'px');
+        }
+        
+        // Also apply to test content
+        const testContent = document.getElementById('test-content');
+        if (testContent) {
+            testContent.style.setProperty('--dynamic-font-size', sizePx + 'px');
         }
     }
 
     updateTextSizeDisplay() {
-        // Update size toggle buttons
-        const sizeBtns = document.querySelectorAll('.size-toggle-btn');
-        sizeBtns.forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.size === this.currentTextSize) {
-                btn.classList.add('active');
-            }
-        });
-    }
-
-    updateLineViewModeDisplay() {
-        // Update inline toggle buttons
-        const toggleBtns = document.querySelectorAll('.inline-toggle-btn');
-        toggleBtns.forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.view === this.currentLineViewMode) {
-                btn.classList.add('active');
-            }
-        });
-
-        // Show/hide appropriate line training areas
-        const fullTextView = document.querySelector('.full-text-view');
-        const singleLineView = document.querySelector('.single-line-view');
+        // Update size slider and value display
+        const sizeSlider = document.getElementById('text-size-slider');
+        const sizeValue = document.getElementById('size-value');
         
-        if (fullTextView && singleLineView) {
-            if (this.currentLineViewMode === 'full-text') {
-                fullTextView.style.display = 'block';
-                singleLineView.style.display = 'none';
-            } else {
-                fullTextView.style.display = 'none';
-                singleLineView.style.display = 'block';
-            }
+        if (sizeSlider && this.currentTextSize) {
+            sizeSlider.value = this.currentTextSize;
+        }
+        
+        if (sizeValue && this.currentTextSize) {
+            sizeValue.textContent = this.currentTextSize;
         }
     }
 
-    updateTrainingModeDisplay() {
-        // Update mode tabs
-        const modeTabs = document.querySelectorAll('.mode-tab');
-        modeTabs.forEach(tab => {
-            tab.classList.remove('active');
-            if (tab.dataset.mode === this.currentTrainingMode) {
-                tab.classList.add('active');
-            }
-        });
-
-        // Update mode instructions
-        const instructionsEl = document.getElementById('mode-instructions');
-        if (instructionsEl) {
-            const instructionsP = instructionsEl.querySelector('p');
-            if (instructionsP) {
-                if (this.currentTrainingMode === 'line-by-line') {
-                    instructionsP.textContent = 'Read line by line with guided pacing to build smooth reading flow and reduce subvocalization. Perfect for developing natural reading rhythm.';
-                } else {
-                    instructionsP.textContent = 'Focus on individual words flashing at high speed to eliminate inner voice and boost reading speed. Ideal for breaking subvocalization habits.';
-                }
-            }
-        }
-
-        // Update start button text
-        const startBtn = document.getElementById('start-training');
-        const startBtnText = startBtn?.querySelector('.btn-text');
-        if (startBtnText) {
-            startBtnText.textContent = '▶️ START';
-        }
-
-        // Show/hide view mode toggle (only for line-by-line)
-        const viewModeSection = document.getElementById('view-mode-section');
-        if (viewModeSection) {
-            if (this.currentTrainingMode === 'line-by-line') {
-                viewModeSection.style.display = 'block';
-                this.updateLineViewModeDisplay();
-            } else {
-                viewModeSection.style.display = 'none';
-            }
-        }
-
-        // Update text size display
-        this.updateTextSizeDisplay();
-        
-        // Apply default text size
-        const trainingDisplay = document.querySelector('.training-display');
-        if (trainingDisplay && !trainingDisplay.classList.contains('text-size-small') && 
-            !trainingDisplay.classList.contains('text-size-medium') && 
-            !trainingDisplay.classList.contains('text-size-large')) {
-            trainingDisplay.classList.add('text-size-medium');
-        }
-
-        // Show/hide appropriate training areas
-        const lineAreas = document.querySelectorAll('.line-by-line-area');
-        const wordArea = document.querySelector('.word-by-word-area');
-        
-        if (this.currentTrainingMode === 'line-by-line') {
-            lineAreas.forEach(area => area.style.display = area.classList.contains('full-text-view') && this.currentLineViewMode === 'full-text' ? 'block' : 
-                area.classList.contains('single-line-view') && this.currentLineViewMode === 'single-line' ? 'block' : 'none');
-            if (wordArea) wordArea.style.display = 'none';
-        } else {
-            lineAreas.forEach(area => area.style.display = 'none');
-            if (wordArea) wordArea.style.display = 'block';
-        }
-    }
 
     // Start assessment
     async startAssessment() {
@@ -903,17 +1153,117 @@ function useCustomTrainingText() {
     app.useCustomTrainingText();
 }
 
-function selectTrainingMode(mode) {
-    app.selectTrainingMode(mode);
-}
-
-function setLineViewMode(viewMode) {
-    app.setLineViewMode(viewMode);
+function setTrainingMode(mode) {
+    app.setTrainingMode(mode);
 }
 
 function setTextSize(size) {
     app.setTextSize(size);
 }
+function toggleFont(fontType) {
+    app.toggleFont(fontType);
+}
+
+function useCustomTextOnce() {
+    const textArea = document.getElementById('custom-training-text');
+    const text = textArea?.value ? textArea.value.trim() : '';
+    
+    if (!text || text.length < 10) {
+        app.showError('Please enter at least 10 characters of text.');
+        return;
+    }
+    
+    // Use text without saving
+    if (typeof trainingZone !== 'undefined') {
+        trainingZone.setCustomText(text);
+    }
+    
+    // Clear and close modal
+    textArea.value = '';
+    document.getElementById('custom-text-title').value = '';
+    app.updateCustomTextStats();
+    app.closeCustomTrainingTextDialog();
+    
+    app.showSuccess('Text loaded for training!');
+}
+
+function saveAndUseCustomText() {
+    const titleInput = document.getElementById('custom-text-title');
+    const textArea = document.getElementById('custom-training-text');
+    const title = titleInput?.value ? titleInput.value.trim() : '';
+    const text = textArea?.value ? textArea.value.trim() : '';
+    
+    if (!text || text.length < 10) {
+        app.showError('Please enter at least 10 characters of text.');
+        return;
+    }
+    
+    // Show loading state
+    const saveBtn = document.querySelector('.primary-btn');
+    const originalText = saveBtn.textContent;
+    saveBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
+    saveBtn.disabled = true;
+    
+    try {
+        // Save the text
+        const savedText = app.saveText(title, text);
+        
+        if (savedText) {
+            // Use the saved text
+            if (typeof trainingZone !== 'undefined') {
+                trainingZone.setCustomText(savedText.content);
+            }
+            
+            // Update dropdown label to show the saved text
+            const label = document.getElementById('dropdown-label');
+            if (label) {
+                label.textContent = savedText.title;
+            }
+            
+            // Clear and close modal
+            titleInput.value = '';
+            textArea.value = '';
+            app.updateCustomTextStats();
+            app.closeCustomTrainingTextDialog();
+            
+            app.showSuccess(`"${savedText.title}" saved and loaded for training!`);
+        }
+    } catch (error) {
+        console.error('Error saving text:', error);
+        app.showError('Failed to save text');
+    } finally {
+        // Reset button
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+function deleteSavedTextWithConfirmation(id, title) {
+    if (confirm(`Delete "${title}"? This cannot be undone.`)) {
+        if (app.deleteSavedText(id)) {
+            app.showSuccess('Text deleted successfully');
+            // Reset dropdown label if the deleted text was selected
+            const label = document.getElementById('dropdown-label');
+            if (label && label.textContent === title) {
+                label.textContent = 'SAVED TEXTS';
+            }
+        }
+    }
+}
+
+
+function selectText(value) {
+    app.selectText(value);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('text-dropdown');
+    if (dropdown && !dropdown.contains(event.target)) {
+        app.closeTextDropdown();
+    }
+});
+
 
 // Initialize app when DOM is ready
 let app;
@@ -976,6 +1326,472 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
     }
 });
+
+// Panel toggle functions
+function toggleTrainingPanel() {
+    const panel = document.getElementById('training-panel');
+    if (panel) {
+        panel.classList.toggle('collapsed');
+    }
+}
+
+function toggleTestInstructions() {
+    const instructions = document.getElementById('test-instructions');
+    if (instructions) {
+        instructions.classList.toggle('collapsed');
+    }
+}
+
+function toggleTestHistory() {
+    const historySection = document.querySelector('.dashboard-test-history');
+    const content = document.getElementById('test-history-content');
+    
+    if (historySection && content) {
+        const isCollapsed = historySection.classList.contains('collapsed');
+        
+        if (isCollapsed) {
+            historySection.classList.remove('collapsed');
+            content.style.display = 'block';
+            // Load test history when expanded
+            if (typeof speedTest !== 'undefined') {
+                speedTest.populateTestHistory();
+            }
+        } else {
+            historySection.classList.add('collapsed');
+            content.style.display = 'none';
+        }
+    }
+}
+
+// Global function for deleting text with confirmation
+function deleteSavedTextWithConfirmation(id, title) {
+    if (confirm(`Delete "${title}"?`)) {
+        if (id.startsWith('sample-')) {
+            const sampleIndex = parseInt(id.replace('sample-', ''));
+            if (storage && storage.deleteSampleText(sampleIndex)) {
+                // Reset dropdown to default if the deleted text was selected
+                const label = document.getElementById('dropdown-label');
+                if (label && label.textContent === title) {
+                    label.textContent = 'Choose Text';
+                }
+                // Update the dropdown to reflect the deletion
+                if (app) {
+                    app.updateTextDropdown();
+                    app.showSuccess('Sample text deleted successfully');
+                }
+            } else {
+                if (app) app.showError('Failed to delete sample text');
+            }
+        } else {
+            const savedId = id.replace('saved-', '');
+            if (app && app.deleteSavedText(savedId)) {
+                // Reset dropdown to default if the deleted text was selected
+                const label = document.getElementById('dropdown-label');
+                if (label && label.textContent === title) {
+                    label.textContent = 'Choose Text';
+                }
+                app.showSuccess('Text deleted successfully');
+            }
+        }
+    }
+}
+
+// Auto-collapse functions
+function collapseTrainingPanel() {
+    const panel = document.getElementById('training-panel');
+    if (panel && !panel.classList.contains('collapsed')) {
+        panel.classList.add('collapsed');
+    }
+}
+
+function collapseTestInstructions() {
+    const instructions = document.getElementById('test-instructions');
+    if (instructions && !instructions.classList.contains('collapsed')) {
+        instructions.classList.add('collapsed');
+    }
+}
+
+// Text Management System
+class TextManager {
+    constructor() {
+        this.selectedTextId = null;
+        this.currentText = null;
+    }
+
+    async init() {
+        await this.loadSavedTexts();
+        this.updateCurrentTextDisplay();
+    }
+
+    async loadSavedTexts() {
+        const savedTexts = JSON.parse(localStorage.getItem('saved-training-texts') || '[]');
+        const sampleTexts = this.getSampleTexts();
+        this.renderSavedTextsList(savedTexts, sampleTexts);
+    }
+
+    getSampleTexts() {
+        const allSamples = [
+            {
+                id: 'sample-1',
+                title: 'Speed Reading Basics',
+                content: `Speed reading is a collection of reading methods which attempt to increase rates of reading without greatly reducing comprehension or retention. These methods include ways to increase reading speed by reading different parts of words, or by removing subvocalization. The most common speed reading technique is the use of peripheral vision to take in groups of words at once rather than reading each word individually. This technique can dramatically improve reading speed while maintaining good comprehension.
+
+Research has shown that most adults read at an average rate of 200-300 words per minute. However, with proper training and techniques, this rate can be increased to 500-800 words per minute or even higher. The key is to train your eyes to move more efficiently across the text and to reduce the mental voice that many people hear when reading.
+
+One important aspect of speed reading is reducing regression, which is the tendency to go back and re-read words or sentences. This habit significantly slows down reading speed. By training yourself to maintain forward momentum and trust your comprehension, you can eliminate most regression and read much faster.`,
+                isSample: true
+            },
+            {
+                id: 'sample-2', 
+                title: 'The Science of Learning',
+                content: `Learning is a complex neurobiological process that involves the formation and strengthening of neural pathways in the brain. When we encounter new information, neurons create connections called synapses. The more frequently these connections are used, the stronger they become, which is why repetition is such an important part of learning.
+
+The brain's ability to change and adapt throughout life is called neuroplasticity. This means that we can continue learning and improving our cognitive abilities regardless of age. Modern neuroscience has shown that the brain can reorganize itself, form new neural connections, and even generate new neurons in certain regions.
+
+Different types of learning activate different parts of the brain. For example, motor learning involves the cerebellum and motor cortex, while language learning primarily activates areas in the left hemisphere such as Broca's and Wernicke's areas. Understanding how the brain learns can help us develop more effective learning strategies.`,
+                isSample: true
+            },
+            {
+                id: 'sample-3',
+                title: 'Focus and Concentration',
+                content: `In our modern digital age, maintaining focus and concentration has become increasingly challenging. Constant notifications, social media, and multitasking demands have created an environment where sustained attention is difficult to achieve. However, focus is a skill that can be developed and strengthened through practice.
+
+The ability to concentrate deeply is what psychologist Cal Newport calls "deep work" - the ability to focus without distraction on cognitively demanding tasks. This skill is becoming increasingly valuable in our economy, yet it's becoming increasingly rare as people struggle with constant interruptions.
+
+Research shows that it takes an average of 23 minutes and 15 seconds to fully refocus after an interruption. This means that frequent interruptions can severely impact productivity and the quality of work. By creating environments that minimize distractions and practicing sustained attention, we can significantly improve our ability to focus and accomplish meaningful work.`,
+                isSample: true
+            }
+        ];
+        
+        // Filter out removed samples for this session
+        return allSamples.filter(sample => 
+            !this.removedSamples || !this.removedSamples.includes(sample.id)
+        );
+    }
+
+    renderSavedTextsList(savedTexts, sampleTexts = []) {
+        const list = document.getElementById('saved-texts-list');
+        if (!list) return;
+
+        list.innerHTML = '';
+        
+        // Add sample texts section
+        if (sampleTexts.length > 0) {
+            const sampleHeader = document.createElement('div');
+            sampleHeader.className = 'text-section-header';
+            sampleHeader.innerHTML = '<span>📚 Sample Texts</span>';
+            list.appendChild(sampleHeader);
+            
+            sampleTexts.forEach(text => {
+                const item = document.createElement('div');
+                item.className = 'saved-text-item sample-text-item';
+                item.dataset.textId = text.id;
+                const isDefault = this.isDefaultText(text.id);
+                if (isDefault) item.classList.add('is-default');
+                
+                item.innerHTML = `
+                    <div class="saved-text-content">
+                        <span class="saved-text-item-title">${text.title || 'Untitled'}</span>
+                        <span class="saved-text-item-info">${this.getWordCount(text.content)} words</span>
+                    </div>
+                    <div class="saved-text-actions">
+                        <button class="set-default-btn ${isDefault ? 'active' : ''}" onclick="event.stopPropagation(); app.textManager.setDefaultText('${text.id}')" title="${isDefault ? 'Default text' : 'Set as default'}">
+                            ${isDefault ? '★' : '☆'}
+                        </button>
+                        <button class="delete-saved-text sample-text-delete" onclick="event.stopPropagation(); deleteSampleText('${text.id}', '${this.escapeHtml(text.title)}')">×</button>
+                    </div>
+                `;
+                item.onclick = () => this.selectText(text);
+                list.appendChild(item);
+            });
+        }
+        
+        // Add saved texts section
+        if (savedTexts.length > 0) {
+            const savedHeader = document.createElement('div');
+            savedHeader.className = 'text-section-header';
+            savedHeader.innerHTML = '<span>💾 Your Texts</span>';
+            list.appendChild(savedHeader);
+        }
+        
+        savedTexts.forEach(text => {
+            const item = document.createElement('div');
+            item.className = 'saved-text-item';
+            item.dataset.textId = text.id;
+            const textId = 'saved-' + text.id;
+            const isDefault = this.isDefaultText(textId);
+            if (isDefault) item.classList.add('is-default');
+            
+            item.innerHTML = `
+                <div class="saved-text-content">
+                    <span class="saved-text-item-title">${text.title || 'Untitled'}</span>
+                    <span class="saved-text-item-info">${this.getWordCount(text.content)} words</span>
+                </div>
+                <div class="saved-text-actions">
+                    <button class="set-default-btn ${isDefault ? 'active' : ''}" onclick="event.stopPropagation(); app.textManager.setDefaultText('${textId}')" title="${isDefault ? 'Default text' : 'Set as default'}">
+                        ${isDefault ? '★' : '☆'}
+                    </button>
+                    <button class="delete-saved-text" onclick="event.stopPropagation(); deleteSavedTextWithConfirmation('${text.id}', '${this.escapeHtml(text.title)}')">×</button>
+                </div>
+            `;
+            item.onclick = () => this.selectText(text);
+            list.appendChild(item);
+        });
+    }
+
+    selectText(text) {
+        this.selectedTextId = text.id;
+        this.currentText = text;
+        
+        // Update UI
+        document.querySelectorAll('.saved-text-item').forEach(item => {
+            item.classList.toggle('selected', item.dataset.textId === text.id);
+        });
+        
+        // Populate editor
+        document.getElementById('text-editor-title').value = text.title || '';
+        document.getElementById('text-editor-content').value = text.content || '';
+        this.updateWordCount();
+        
+        // Show/hide appropriate elements
+        document.getElementById('text-editor-form').style.display = 'block';
+        document.getElementById('text-editor-empty').style.display = 'none';
+        document.getElementById('save-text-btn').style.display = 'inline-block';
+        document.getElementById('delete-text-btn').style.display = 'inline-block';
+    }
+
+    createNewText() {
+        this.selectedTextId = Date.now().toString();
+        this.currentText = { id: this.selectedTextId, title: '', content: '' };
+        
+        // Clear selection
+        document.querySelectorAll('.saved-text-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        // Clear and show editor
+        document.getElementById('text-editor-title').value = '';
+        document.getElementById('text-editor-content').value = '';
+        this.updateWordCount();
+        
+        document.getElementById('text-editor-form').style.display = 'block';
+        document.getElementById('text-editor-empty').style.display = 'none';
+        document.getElementById('save-text-btn').style.display = 'inline-block';
+        document.getElementById('delete-text-btn').style.display = 'none';
+        
+        // Focus title field
+        document.getElementById('text-editor-title').focus();
+    }
+
+    async saveCurrentText() {
+        const title = document.getElementById('text-editor-title').value.trim();
+        const content = document.getElementById('text-editor-content').value.trim();
+        
+        if (!content || content.length < 10) {
+            app.showError('Please enter at least 10 characters of text.');
+            return;
+        }
+        
+        this.currentText.title = title || 'Untitled';
+        this.currentText.content = content;
+        
+        // Save to localStorage
+        const savedTexts = JSON.parse(localStorage.getItem('saved-training-texts') || '[]');
+        const existingIndex = savedTexts.findIndex(text => text.id === this.selectedTextId);
+        
+        if (existingIndex >= 0) {
+            savedTexts[existingIndex] = this.currentText;
+        } else {
+            savedTexts.push(this.currentText);
+        }
+        
+        localStorage.setItem('saved-training-texts', JSON.stringify(savedTexts));
+        
+        // Refresh the sidebar list to show the newly saved text
+        await this.loadSavedTexts();
+        
+        // Set as current text and close dialog
+        await this.useText(this.currentText);
+        this.closeDialog();
+    }
+
+    async deleteCurrentText() {
+        if (!this.selectedTextId) return;
+        
+        if (confirm('Are you sure you want to delete this text?')) {
+            const savedTexts = JSON.parse(localStorage.getItem('saved-training-texts') || '[]');
+            const filteredTexts = savedTexts.filter(text => text.id !== this.selectedTextId);
+            localStorage.setItem('saved-training-texts', JSON.stringify(filteredTexts));
+            
+            await this.loadSavedTexts();
+            this.clearEditor();
+        }
+    }
+
+    async useText(text) {
+        app.currentText = text.content;
+        if (typeof trainingZone !== 'undefined') {
+            trainingZone.setCustomText(text.content);
+        }
+        this.updateCurrentTextDisplay(text);
+    }
+
+    updateCurrentTextDisplay(text = null) {
+        const display = document.getElementById('current-text-display');
+        if (!display) return;
+        
+        const titleEl = display.querySelector('.current-text-title');
+        const infoEl = display.querySelector('.current-text-info');
+        
+        if (text || app.currentText) {
+            const currentText = text || { title: 'Current Text', content: app.currentText || '' };
+            titleEl.textContent = currentText.title || 'Custom Text';
+            infoEl.textContent = `${this.getWordCount(currentText.content)} words`;
+        } else {
+            titleEl.textContent = 'No text selected';
+            infoEl.textContent = '0 words';
+        }
+    }
+
+    updateWordCount() {
+        const content = document.getElementById('text-editor-content').value;
+        const wordCount = this.getWordCount(content);
+        const estimatedTime = Math.ceil(wordCount / 250); // Assume 250 WPM reading speed
+        
+        document.getElementById('text-editor-word-count').textContent = wordCount;
+        document.getElementById('text-editor-estimated-time').textContent = `${estimatedTime} min`;
+    }
+
+    getWordCount(text) {
+        return text ? text.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
+    }
+
+    clearEditor() {
+        this.selectedTextId = null;
+        this.currentText = null;
+        
+        document.getElementById('text-editor-form').style.display = 'none';
+        document.getElementById('text-editor-empty').style.display = 'flex';
+        document.getElementById('save-text-btn').style.display = 'none';
+        document.getElementById('delete-text-btn').style.display = 'none';
+    }
+
+    deleteSampleText(textId) {
+        // When a sample text is "deleted", we actually convert it to a saved text
+        // that the user can then modify
+        const sampleTexts = this.getSampleTexts();
+        const sampleText = sampleTexts.find(text => text.id === textId);
+        
+        if (sampleText) {
+            // Create a new saved text based on the sample
+            const newText = {
+                id: Date.now().toString(),
+                title: sampleText.title + ' (Copy)',
+                content: sampleText.content,
+                created: Date.now()
+            };
+            
+            // Save it to localStorage
+            const savedTexts = JSON.parse(localStorage.getItem('saved-training-texts') || '[]');
+            savedTexts.push(newText);
+            localStorage.setItem('saved-training-texts', JSON.stringify(savedTexts));
+            
+            // Remove the sample from the local list (for this session)
+            this.removedSamples = this.removedSamples || [];
+            this.removedSamples.push(textId);
+            
+            // Reload the texts list
+            this.loadSavedTexts();
+            
+            // Auto-select the new text for editing
+            this.selectText(newText);
+        }
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Default text management
+    getDefaultTextId() {
+        return localStorage.getItem('flowread_default_text_id') || 'sample-0';
+    }
+
+    setDefaultText(textId) {
+        localStorage.setItem('flowread_default_text_id', textId);
+        // Update the UI to reflect the new default
+        this.updateSavedTextsListForDefault();
+    }
+
+    isDefaultText(textId) {
+        return this.getDefaultTextId() === textId;
+    }
+
+    updateSavedTextsListForDefault() {
+        const defaultTextId = this.getDefaultTextId();
+        document.querySelectorAll('.saved-text-item').forEach(item => {
+            const textId = item.dataset.textId;
+            const isDefault = textId === defaultTextId;
+            
+            if (isDefault) {
+                item.classList.add('is-default');
+            } else {
+                item.classList.remove('is-default');
+            }
+        });
+    }
+
+    setDefaultText(textId) {
+        app.setDefaultText(textId);
+        app.showSuccess('Default text updated');
+    }
+
+    closeDialog() {
+        const modal = document.getElementById('text-management-modal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+}
+
+// Text Management Functions
+function showTextManagementDialog() {
+    const modal = document.getElementById('text-management-modal');
+    if (modal) {
+        modal.classList.add('active');
+        app.textManager.init();
+        
+        // Set up word count updating
+        const contentTextarea = document.getElementById('text-editor-content');
+        if (contentTextarea) {
+            contentTextarea.oninput = () => app.textManager.updateWordCount();
+        }
+    }
+}
+
+function closeTextManagementDialog() {
+    app.textManager.closeDialog();
+}
+
+function deleteSampleText(textId, title) {
+    if (confirm(`Are you sure you want to delete the sample text "${title}"?`)) {
+        app.textManager.deleteSampleText(textId);
+    }
+}
+
+function createNewText() {
+    app.textManager.createNewText();
+}
+
+function saveCurrentText() {
+    app.textManager.saveCurrentText();
+}
+
+function deleteCurrentText() {
+    app.textManager.deleteCurrentText();
+}
 
 // Export app for debugging
 window.FlowReadApp = app;

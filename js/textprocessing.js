@@ -8,7 +8,9 @@ class TextProcessor {
 
     // Clean and prepare text for reading
     cleanText(text) {
-        return text
+        if (!text) return '';
+        const textStr = String(text);
+        return textStr
             .trim()
             .replace(/\s+/g, ' ')
             .replace(/\n+/g, '\n')

@@ -25,6 +25,7 @@ class SpeedTest {
                 .filter(s => s.mode === 'test')
                 .sort((a, b) => b.date - a.date)
                 .map(s => ({
+                    id: s.id,
                     wpm: s.actualWpm || s.wpmTarget || 0,
                     date: s.date
                 }));
@@ -111,7 +112,13 @@ class SpeedTest {
         const completeBtn = document.getElementById('complete-test');
 
         if (beginBtn) {
-            beginBtn.onclick = () => this.startTest();
+            beginBtn.onclick = () => {
+                this.startTest();
+                // Auto-collapse test instructions when starting test
+                if (typeof collapseTestInstructions === 'function') {
+                    collapseTestInstructions();
+                }
+            };
         }
 
         if (doneBtn) {
@@ -275,6 +282,65 @@ class SpeedTest {
         this.isTestActive = false;
 
         console.log('Test system reset, ready for next test');
+    }
+
+    // Populate the test history list
+    populateTestHistory() {
+        const historyList = document.getElementById('test-history-list');
+        if (!historyList || this.testResults.length === 0) {
+            if (historyList) {
+                historyList.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-style: italic;">No test history available</div>';
+            }
+            return;
+        }
+
+        historyList.innerHTML = '';
+        
+        this.testResults.forEach((result, index) => {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            
+            const date = new Date(result.date);
+            const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            historyItem.innerHTML = `
+                <div class="history-date">${formattedDate}</div>
+                <div class="history-speed">${result.wpm} WPM</div>
+                <div class="history-actions">
+                    <button class="delete-test-btn" onclick="speedTest.deleteTestResult(${index})" title="Delete this test">×</button>
+                </div>
+            `;
+            
+            historyList.appendChild(historyItem);
+        });
+    }
+
+    // Delete a specific test result
+    async deleteTestResult(index) {
+        if (index < 0 || index >= this.testResults.length) return;
+        
+        if (!confirm('Are you sure you want to delete this test result?')) return;
+        
+        try {
+            const result = this.testResults[index];
+            
+            // Delete from persistent storage
+            if (result.id) {
+                await storage.delete('session', result.id);
+                console.log('Test result deleted from storage:', result.id);
+            }
+            
+            // Remove from local array
+            this.testResults.splice(index, 1);
+            
+            // Update the display
+            this.populateTestHistory();
+            this.updateDashboard();
+            
+            console.log('Test result deleted successfully');
+        } catch (error) {
+            console.error('Error deleting test result:', error);
+        }
     }
 }
 

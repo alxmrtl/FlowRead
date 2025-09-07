@@ -346,168 +346,93 @@ class FlowReadStorage {
 
     // Sample texts for speed reading tests
     getSampleTexts() {
+        // Check if custom sample texts exist in localStorage
+        const customSamples = localStorage.getItem('flowread_sample_texts');
+        if (customSamples) {
+            try {
+                return JSON.parse(customSamples);
+            } catch (e) {
+                console.warn('Failed to parse custom sample texts, using defaults');
+            }
+        }
+        
+        // Default sample texts about speed reading and flow states
+        // Save them to localStorage on first load so they become deletable
+        const defaultSamples = this.getDefaultSampleTexts();
+        this.saveSampleTexts(defaultSamples);
+        return defaultSamples;
+    }
+
+    // Get the default sample texts
+    getDefaultSampleTexts() {
         return [
             {
-                title: "The Future of Reading",
-                content: `Reading has evolved dramatically over the centuries, from ancient scrolls to digital screens. Today, we face new challenges in how we process information in an increasingly connected world.
+                title: "The Science of Speed Reading",
+                content: `Speed reading is more than just moving your eyes faster across a page—it's a fundamental rewiring of how your brain processes text. Traditional reading habits, developed in childhood, often become obstacles to efficient comprehension as adults.
 
-The average person now encounters more text in a single day than previous generations might have seen in weeks. Social media posts, emails, articles, and notifications compete for our attention. This information overload has created a need for more efficient reading strategies.
+The first barrier to overcome is subvocalization, the inner voice that "speaks" every word as you read. While helpful for learning, this mental speech limits your reading speed to the pace of spoken language—roughly 200-250 words per minute. Advanced readers train themselves to process text directly through visual recognition, bypassing this auditory bottleneck entirely.
 
-Speed reading techniques have gained popularity as a response to this challenge. These methods focus on reducing subvocalization, expanding peripheral vision, and eliminating regression. However, comprehension must remain the primary goal. There is little value in reading quickly if the material is not understood or retained.
+Eye movement patterns reveal another opportunity for improvement. Untrained readers make frequent regressions, unconsciously re-reading words and phrases they've already processed. This habit, born from uncertainty and poor focus, can reduce reading efficiency by 30-40%. Speed reading training teaches deliberate forward momentum, trusting your brain's remarkable ability to fill in gaps and maintain comprehension.
 
-Modern research in cognitive science reveals that reading is a complex process involving multiple brain regions. Visual processing, language comprehension, and memory formation all work together to create meaning from text. Understanding these mechanisms can help us develop better reading strategies.
+Peripheral vision expansion allows readers to capture multiple words—even entire phrases—in a single fixation. Instead of the typical word-by-word progression, skilled readers develop chunk reading abilities, processing 3-5 words simultaneously. This technique dramatically increases throughput while reducing eye strain and mental fatigue.
 
-Technology also plays a crucial role in modern reading habits. E-readers and tablets offer features like adjustable font sizes and backlighting. Some applications use rapid serial visual presentation to train reading speed. Others employ eye-tracking to analyze reading patterns and suggest improvements.
-
-The key to effective reading lies in adaptability. Different types of content require different approaches. Skimming works well for emails and social media, while technical documents demand careful, deliberate reading. The skilled reader learns when to accelerate and when to slow down, matching their reading speed to their comprehension goals.`,
-                wordCount: 250,
-                difficulty: 0.6
-            },
-            {
-                title: "Morning Coffee Ritual",
-                content: `The aroma of freshly ground coffee beans fills the kitchen as Sarah begins her morning ritual. This daily ceremony has remained unchanged for years, providing structure and comfort to the start of each day.
-
-First, she selects her favorite mug from the cabinet. It's nothing fancy—a simple white ceramic cup with a small chip on the handle that makes it uniquely hers. The coffee maker, an old but reliable machine, begins its familiar gurgling as hot water meets the grounds.
-
-While waiting, Sarah opens the window to let in fresh air. The sounds of the neighborhood awakening drift in: dogs barking, cars starting, the distant hum of traffic. These sounds don't disturb her; instead, they create a soundtrack that signals the world coming to life.
-
-The coffee finishes brewing with a final hiss. She pours it slowly, watching the dark liquid fill the cup. No sugar or cream—she prefers it black, strong, and honest. The first sip is always the best, warming her from the inside out.
-
-With her coffee in hand, Sarah sits at the kitchen table and looks out at her small garden. The plants are thriving despite her occasional forgetfulness with watering. A robin lands on the fence, pecks at something invisible, then flies away.
-
-This quiet moment before the day's responsibilities take over is precious to her. No phone, no notifications, no urgent tasks. Just coffee, silence, and the gentle transition from sleep to wakefulness. Some might call it simple, but Sarah knows that the best things in life often are.`,
-                wordCount: 260,
-                difficulty: 0.4
-            },
-            {
-                title: "The Science of Memory",
-                content: `Human memory is one of the most fascinating and complex aspects of cognition. Unlike a computer's storage system, our memories are not simply filed away in discrete locations. Instead, they are distributed across networks of neurons that work together to encode, store, and retrieve information.
-
-The process begins with encoding, where sensory information is converted into a form that can be stored in the brain. This involves attention and perception—we cannot remember what we do not first notice. The hippocampus plays a crucial role in this initial processing, acting as a temporary holding area for new memories.
-
-Short-term memory has limited capacity and duration. Miller's famous paper suggested we can hold about seven items in working memory, though recent research suggests the number may be closer to four. Without rehearsal or transfer to long-term memory, this information quickly fades.
-
-Long-term memory storage involves structural changes in neural connections. Repeated activation of specific neural pathways strengthens synaptic connections through a process called long-term potentiation. This is why repetition and practice are so important for learning and retention.
-
-Memory retrieval is not like playing back a recording. Each time we recall a memory, we reconstruct it from various neural networks. This reconstruction can be influenced by our current state, emotions, and other memories. As a result, our recollections can change over time, sometimes becoming distorted or incorporating false elements.
-
-Understanding these processes has practical implications for learning and studying. Techniques like spaced repetition, elaborative encoding, and the use of multiple sensory modalities can significantly improve memory formation and retention. The key is working with our brain's natural processes rather than against them.`,
-                wordCount: 280,
-                difficulty: 0.8
-            },
-            {
-                title: "Ocean Exploration",
-                content: `The ocean covers more than seventy percent of Earth's surface, yet humans have explored less than five percent of this vast underwater realm. This mysterious frontier holds countless secrets about our planet's history, climate, and the origins of life itself.
-
-Deep-sea exploration began in earnest during the twentieth century with the development of advanced submersibles and diving equipment. Early pioneers like Jacques Cousteau brought the underwater world to public attention through films and documentaries. Their work inspired a new generation of marine scientists and explorers.
-
-Modern technology has revolutionized our ability to study the ocean depths. Remotely operated vehicles can descend to crushing depths where humans cannot survive. These robotic explorers are equipped with high-definition cameras, sampling equipment, and powerful lights that illuminate the eternal darkness of the deep sea.
-
-Recent discoveries have been nothing short of extraordinary. Scientists have found entire ecosystems thriving around hydrothermal vents, where superheated water rich in minerals creates oases of life in the ocean desert. Bizarre creatures adapted to extreme pressure and temperature conditions challenge our understanding of life's limits.
-
-The ocean plays a crucial role in regulating Earth's climate system. Ocean currents transport heat around the globe, while the water itself absorbs massive amounts of carbon dioxide from the atmosphere. Understanding these processes is essential for predicting future climate changes and their impacts on human civilization.
-
-Conservation efforts have become increasingly important as human activities threaten marine ecosystems. Overfishing, pollution, and climate change pose significant challenges to ocean health. Protecting these underwater environments requires international cooperation and continued scientific research to understand the complex relationships between marine life and ocean systems.`,
-                wordCount: 275,
+Perhaps most importantly, speed reading is adaptive. Different materials demand different approaches: emails require rapid scanning, technical documents need careful analysis, and fiction benefits from immersive pacing. The goal isn't maximum speed—it's optimal speed for your purpose, maintaining comprehension while eliminating inefficiencies that slow you down unnecessarily.`,
+                wordCount: 245,
                 difficulty: 0.7
             },
             {
-                title: "The Art of Cooking",
-                content: `Cooking is both an art and a science, combining creativity with precise techniques to transform raw ingredients into nourishing and delicious meals. Throughout history, culinary traditions have evolved alongside human civilization, reflecting cultural values, available resources, and technological advances.
+                title: "Reading and Flow States",
+                content: `The concept of flow—that state of effortless concentration where time seems to disappear—applies powerfully to reading. When readers achieve flow, comprehension increases while mental effort decreases, creating an optimal learning experience that feels both engaging and sustainable.
 
-The foundation of good cooking lies in understanding ingredients and how they interact with heat, time, and other elements. A skilled chef knows that onions become sweet when caramelized slowly, that proteins coagulate at specific temperatures, and that acids can brighten flavors while balancing richness.
+Flow occurs when challenge and skill levels align perfectly. If text is too easy, boredom sets in; too difficult, and anxiety disrupts focus. Speed reading training creates this balance by gradually increasing your processing capacity while providing appropriately challenging material. As your skills develop, you can tackle more complex texts while maintaining that sweet spot of engaged concentration.
 
-Preparation is often more important than the actual cooking process. Professional chefs spend hours preparing ingredients before service begins. This mise en place philosophy ensures that everything is ready when needed, allowing the cook to focus on timing and execution during the critical cooking phase.
+The flow state requires clear goals and immediate feedback—exactly what structured reading practice provides. Unlike passive reading, speed training gives you measurable targets: words per minute, comprehension scores, and completion times. This constant feedback loop keeps your mind fully engaged, preventing the wandering attention that disrupts flow.
 
-Different cooking methods produce dramatically different results from the same ingredients. Roasting concentrates flavors through caramelization, while steaming preserves delicate textures and nutrients. Braising combines dry and moist heat to tenderize tough cuts of meat, creating complex layers of flavor through patient, slow cooking.
+Eliminating distractions is crucial for achieving reading flow. This means more than just silencing notifications—it involves training your internal focus. Advanced readers develop what psychologists call "selective attention," the ability to maintain concentration despite environmental interruptions. Regular practice builds this mental muscle, making deep focus a skill rather than an accident.
 
-Seasoning is perhaps the most crucial skill in cooking. Salt enhances natural flavors rather than masking them, while herbs and spices add complexity and cultural identity to dishes. The timing of when seasonings are added can dramatically affect the final result.
-
-Modern cooking has embraced both traditional techniques and innovative approaches. Molecular gastronomy explores the science behind cooking, while farm-to-table movements emphasize local, seasonal ingredients. Despite these trends, the fundamental principles of good cooking remain unchanged: respect for ingredients, attention to detail, and a passion for creating memorable dining experiences.`,
-                wordCount: 270,
+The neurological benefits of reading flow extend beyond the session itself. When your brain operates in this optimal state, it forms stronger memory connections and processes information more efficiently. The result is not just faster reading, but better retention and deeper understanding—the compound effect that makes speed reading training so powerful.`,
+                wordCount: 238,
                 difficulty: 0.6
             },
             {
-                title: "Urban Wildlife",
-                content: `Cities might seem like concrete jungles, but they actually support a surprising diversity of wildlife. Urban environments create unique ecosystems where animals and plants adapt to life alongside millions of humans. These adaptations often lead to fascinating behavioral changes and evolutionary developments.
+                title: "Breaking Mental Speed Limits",
+                content: `The human brain processes visual information at extraordinary speeds—up to 13 milliseconds for basic recognition. Yet most people read at a fraction of their potential, trapped by mental barriers that have nothing to do with biological limitations. Breaking these psychological speed limits requires understanding the difference between what you can process and what you allow yourself to process.
 
-Birds are perhaps the most visible urban wildlife. Pigeons have become so synonymous with city life that many people forget they were originally rock doves that nested on cliffs. Their ability to navigate using landmarks and magnetic fields makes them perfect urban residents. Hawks and falcons nest on skyscrapers, hunting the abundant pigeon population from great heights.
+Fear of missing information creates the biggest obstacle to faster reading. This anxiety manifests as regression—constantly looking back to "check" that you understood. But research shows that comprehension actually improves when you trust forward momentum. Your brain's parallel processing capabilities fill in gaps automatically, creating understanding from context and patterns rather than word-by-word analysis.
 
-Mammals have also found ways to thrive in urban settings. Raccoons have become expert problem-solvers, learning to open garbage cans and even washing their food in fountains. Coyotes have expanded their range into many cities, adapting their hunting strategies and becoming more nocturnal to avoid human contact.
+Traditional education creates artificial speed limits by emphasizing perfection over progress. Students learn to read every word carefully, treating text like a legal document requiring forensic analysis. This hypercautious approach becomes deeply ingrained, making adult readers feel guilty about "skipping" words, even when those words add no meaningful content.
 
-Urban waterways support their own communities of wildlife. Storm drains and concrete channels may seem inhospitable, but they often teem with life during rainy seasons. Ducks, geese, and other waterfowl make their homes in city parks and artificial ponds, while fish populations adapt to altered water conditions.
+The flow state dissolves these mental barriers entirely. When challenge matches skill level perfectly, self-consciousness disappears and performance skyrockets. Speed reading training creates this optimal zone by gradually increasing demands while building confidence. Each successful session proves that faster doesn't mean worse—it often means better, as increased engagement improves focus and retention.
 
-Plant life in cities creates vital green corridors for wildlife movement. Parks, gardens, and even weedy vacant lots provide food, shelter, and nesting sites. Native plants support local insect populations, which in turn feed birds and other small animals, creating interconnected food webs within urban environments.
-
-Understanding urban wildlife helps us design better cities that support both human needs and biodiversity. Green roofs, wildlife corridors, and native plant landscaping can create more sustainable urban environments that benefit all residents, both human and non-human alike.`,
-                wordCount: 285,
+Mental speed limits exist only in your head. Professional speed readers routinely achieve 1000+ words per minute with excellent comprehension, not because they have superhuman brains, but because they've eliminated the psychological obstacles that constrain most readers. The question isn't whether you can read faster—it's whether you'll give yourself permission to break through the artificial limits holding you back.`,
+                wordCount: 252,
                 difficulty: 0.7
-            },
-            {
-                title: "The Power of Music",
-                content: `Music possesses a unique ability to transcend cultural boundaries and speak directly to human emotions. This universal language has accompanied humanity throughout history, serving as a means of communication, celebration, mourning, and creative expression across every known civilization.
-
-The psychological effects of music are both immediate and profound. Research shows that listening to music releases dopamine in the brain, the same neurotransmitter associated with pleasure from food, relationships, and other rewarding experiences. Different types of music can lower stress hormones, reduce anxiety, and even boost immune system function.
-
-Music therapy has emerged as a legitimate medical treatment for various conditions. Stroke patients often recover speech abilities more quickly when working with music therapists. Alzheimer's patients may remember song lyrics long after other memories have faded, suggesting that musical memories are stored differently in the brain than other types of information.
-
-The structure of music reflects mathematical principles found throughout nature. The relationships between musical intervals correspond to mathematical ratios, while rhythm patterns mirror biological cycles like heartbeats and breathing. This connection between music and natural patterns may explain why certain musical combinations feel inherently pleasing to human ears.
-
-Technology has transformed how we create, distribute, and experience music. Digital tools allow anyone to compose and record music from their home, while streaming services provide instant access to virtually any song ever recorded. However, live performance remains irreplaceable, creating shared experiences that recorded music cannot fully replicate.
-
-Cultural identity often intertwines closely with musical traditions. Folk songs preserve historical narratives and cultural values across generations. Modern genres continue this tradition, with hip-hop, country, reggae, and other styles reflecting the experiences and perspectives of their originating communities while influencing global culture.`,
-                wordCount: 280,
-                difficulty: 0.7
-            },
-            {
-                title: "Space Exploration",
-                content: `Humanity's desire to explore space represents one of our greatest achievements and most ambitious ongoing endeavors. From the first satellite launches to plans for Mars colonization, space exploration has pushed the boundaries of technology, science, and human endurance while fundamentally changing our perspective on Earth and our place in the universe.
-
-The space race of the twentieth century drove rapid technological advancement. Competition between nations led to remarkable achievements in a relatively short timespan: from first satellite to moon landing in just twelve years. These achievements required unprecedented cooperation between scientists, engineers, and organizations working toward common goals.
-
-Robotic missions have revolutionized our understanding of the solar system. Unmanned spacecraft have visited every planet, photographed distant moons, and sampled alien atmospheres. The Hubble Space Telescope has captured images of galaxies billions of light-years away, while Mars rovers search for signs of past or present life on the Red Planet.
-
-The International Space Station represents the pinnacle of international cooperation in space. Astronauts and cosmonauts from different countries work together in microgravity, conducting experiments that would be impossible on Earth. Their research advances our knowledge of materials science, biology, and physics while preparing for future long-duration missions.
-
-Commercial spaceflight has opened new possibilities for space exploration. Private companies are developing reusable rockets, space tourism, and even plans for space manufacturing. This commercialization could make space more accessible while reducing costs for scientific missions and exploration.
-
-Future space exploration faces both technical and ethical challenges. Long-duration missions to Mars will test human psychological and physical limits. Questions about planetary protection, resource utilization, and the rights of potential extraterrestrial life require careful consideration as we expand our presence beyond Earth.`,
-                wordCount: 275,
-                difficulty: 0.8
-            },
-            {
-                title: "The History of Books",
-                content: `Books have been humanity's primary method of preserving and transmitting knowledge for thousands of years. The evolution of books reflects technological advances, cultural changes, and the persistent human desire to record ideas, stories, and information for future generations.
-
-The earliest books were clay tablets used by ancient civilizations to record transactions, laws, and literature. The Epic of Gilgamesh, one of humanity's oldest known stories, was preserved on such tablets. Ancient Egyptians developed papyrus scrolls, while Chinese and Roman cultures created books using various materials including bamboo, silk, and parchment.
-
-The invention of the printing press in the fifteenth century revolutionized book production and distribution. Gutenberg's movable type made books affordable for ordinary people rather than just wealthy elites and religious institutions. This democratization of knowledge accelerated the spread of literacy and enabled the Renaissance, Reformation, and Scientific Revolution.
-
-Book design evolved to improve readability and durability. The codex format, with pages bound together, replaced scrolls because it was more practical for reference and storage. Typography developed into an art form, with different fonts designed for specific purposes. Illustrations, indices, and chapter divisions made books more user-friendly and accessible.
-
-The industrial revolution brought mass production techniques to book manufacturing. Steam-powered printing presses, wood pulp paper, and mechanized binding reduced costs further while improving quality and consistency. Public libraries and educational systems expanded access to books for all social classes.
-
-Digital technology now challenges traditional book formats while creating new possibilities. E-books offer convenience and instant access, while audiobooks cater to different learning preferences. However, physical books remain popular, suggesting that the tactile experience of reading will continue alongside digital innovations in publishing and distribution.`,
-                wordCount: 270,
-                difficulty: 0.6
-            },
-            {
-                title: "The Science of Sleep",
-                content: `Sleep remains one of the most mysterious and essential aspects of human biology. Despite spending roughly one-third of our lives asleep, scientists are still uncovering the complex mechanisms and purposes of this daily phenomenon that appears universal among animal species.
-
-The sleep cycle consists of distinct stages, each serving different functions. Non-REM sleep includes light sleep, deep sleep, and the deepest stage where physical restoration occurs. During deep sleep, the body repairs tissues, consolidates immune function, and releases growth hormones. REM sleep, characterized by rapid eye movements and vivid dreams, appears crucial for memory consolidation and emotional processing.
-
-Sleep architecture changes throughout our lifespans. Infants spend most of their time sleeping, with a higher proportion of REM sleep that supports rapid brain development. Adolescents experience shifts in circadian rhythms that make them naturally stay up later, while older adults often experience fragmented sleep and changes in sleep quality.
-
-Modern life poses significant challenges to healthy sleep patterns. Artificial lighting, particularly blue light from screens, can disrupt the production of melatonin, the hormone that regulates sleep-wake cycles. Shift work, jet lag, and constant connectivity create additional obstacles to maintaining consistent, restorative sleep schedules.
-
-Sleep deprivation has serious consequences for physical and mental health. Chronic sleep loss increases risks of obesity, diabetes, heart disease, and depression. Cognitive function suffers dramatically with insufficient sleep, affecting attention, decision-making, and memory formation. Even moderate sleep restriction can impair performance similar to alcohol intoxication.
-
-Understanding sleep science has led to better treatments for sleep disorders and improved sleep hygiene recommendations. Sleep medicine now recognizes conditions like sleep apnea, restless leg syndrome, and various parasomnias. Simple changes in environment, routine, and lifestyle can significantly improve sleep quality for most people.`,
-                wordCount: 285,
-                difficulty: 0.8
             }
         ];
+    }
+
+    // Methods for managing custom sample texts
+    saveSampleTexts(sampleTexts) {
+        try {
+            localStorage.setItem('flowread_sample_texts', JSON.stringify(sampleTexts));
+        } catch (error) {
+            console.error('Failed to save sample texts:', error);
+        }
+    }
+
+    deleteSampleText(index) {
+        try {
+            const currentSamples = this.getSampleTexts();
+            if (index >= 0 && index < currentSamples.length) {
+                currentSamples.splice(index, 1);
+                this.saveSampleTexts(currentSamples);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Failed to delete sample text:', error);
+            return false;
+        }
     }
 }
 
