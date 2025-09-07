@@ -1843,6 +1843,101 @@ textarea:focus {
     justify-content: center;
 }
 
+/* PWA Specific Styles */
+/* Hide install prompt on installed PWA */
+@media (display-mode: standalone) {
+    .install-prompt {
+        display: none !important;
+    }
+    
+    /* Add some top padding to account for mobile status bar */
+    .header {
+        padding-top: calc(1rem + env(safe-area-inset-top));
+    }
+    
+    /* Optimize for PWA full-screen experience */
+    body {
+        overflow-x: hidden;
+    }
+}
+
+/* iOS PWA specific styles */
+@media (display-mode: standalone) and (max-width: 768px) {
+    .header {
+        padding-top: calc(1rem + 20px); /* Status bar height on iOS */
+    }
+}
+
+/* Touch-friendly improvements */
+@media (max-width: 768px) {
+    /* Larger touch targets */
+    .nav-btn,
+    .primary-btn,
+    .secondary-btn,
+    .mode-btn,
+    .control-bar-btn {
+        min-height: 44px; /* iOS recommended minimum */
+        min-width: 44px;
+    }
+    
+    /* Better spacing for touch */
+    .nav {
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+    
+    /* Improved modal for mobile */
+    .modal-content {
+        margin: 5% auto;
+        padding: 1.5rem;
+        border-radius: 12px;
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    /* Optimize training controls for touch */
+    .mode-btn {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Better slider controls */
+    #training-speed-slider,
+    #text-size-slider {
+        height: 8px;
+    }
+    
+    #training-speed-slider::-webkit-slider-thumb,
+    #text-size-slider::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+    }
+    
+    /* Optimize test interface */
+    .test-controls {
+        padding: 1.5rem;
+        gap: 1rem;
+    }
+    
+    .test-content {
+        padding: 1.5rem;
+        line-height: 1.8;
+    }
+    
+    /* Better word display for mobile */
+    .word-display {
+        padding: 2rem 1rem;
+        min-height: 4rem;
+    }
+    
+    /* Optimize progress charts */
+    #progress-mini-chart {
+        width: 100%;
+        height: 80px;
+    }
+}
+
 /* Enhanced responsive design */
 @media (max-width: 480px) {
     .stats-grid {
@@ -1872,6 +1967,90 @@ textarea:focus {
         margin: 10% auto;
         width: 95%;
         padding: 1rem;
+    }
+}
+
+/* PWA Install Button */
+.pwa-install-btn {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    background: var(--primary-color) !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 24px !important;
+    border-radius: 25px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(81, 125, 99, 0.3) !important;
+    z-index: 10000 !important;
+    display: none !important;
+    transition: all 0.3s ease !important;
+    font-size: 0.875rem !important;
+    white-space: nowrap !important;
+}
+
+.pwa-install-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(81, 125, 99, 0.4) !important;
+}
+
+.pwa-install-btn:active {
+    transform: translateY(0) !important;
+}
+
+/* PWA status indicator */
+.pwa-status {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    background: var(--success-color);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: none;
+    z-index: 1000;
+}
+
+@media (display-mode: standalone) {
+    .pwa-status {
+        display: block;
+    }
+    
+    .pwa-status::before {
+        content: "📱 ";
+    }
+}
+
+/* Offline indicator */
+.offline-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--warning-color);
+    color: white;
+    text-align: center;
+    padding: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: none;
+    z-index: 10000;
+    animation: slideDown 0.3s ease-out;
+}
+
+.offline-indicator.show {
+    display: block;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: translateY(0);
     }
 }
 
