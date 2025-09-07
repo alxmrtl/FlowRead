@@ -788,7 +788,7 @@ body {
     margin-right: 0.5rem;
 }
 
-.text-controls {
+.training-text-controls {
     padding: 0.75rem 1rem;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -3125,11 +3125,11 @@ textarea:focus {
 }
 
 /* TEXT Section */
-.text-controls {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    flex-wrap: nowrap;
+.control-box .text-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    flex-wrap: nowrap !important;
 }
 
 .text-controls .primary-btn {
@@ -3145,11 +3145,11 @@ textarea:focus {
 }
 
 /* STYLE Section */
-.style-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: nowrap;
+.control-box .style-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    flex-wrap: nowrap !important;
 }
 
 .style-row {
@@ -3228,10 +3228,10 @@ textarea:focus {
 
 /* Persistent Control Bar */
 .persistent-control-bar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 0.75rem;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 0.75rem !important;
     background: white;
     border: 2px solid var(--border);
     border-radius: 12px;
@@ -3240,8 +3240,8 @@ textarea:focus {
     position: relative;
     z-index: 10;
     transition: all 0.3s ease;
-    gap: 1rem;
-    flex-wrap: nowrap;
+    gap: 1rem !important;
+    flex-wrap: nowrap !important;
 }
 
 .persistent-control-bar.training-mode {
@@ -3286,11 +3286,11 @@ textarea:focus {
 }
 
 .speed-control-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    width: 100%;
-    flex-wrap: nowrap;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
 }
 
 .speed-control-bar .speed-control-top {
@@ -3336,6 +3336,7 @@ textarea:focus {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    flex: 1;
 }
 
 .current-text-title {
