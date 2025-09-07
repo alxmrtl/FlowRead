@@ -1,0 +1,43 @@
+{
+  "name": "FlowRead - Speed Reading Trainer",
+  "short_name": "FlowRead",
+  "description": "Train your eyes, guide your mind, flow through words. Advanced speed reading training application.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#517d63",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "FlowReadLogos/eggshell.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "FlowReadLogos/eggshell.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "FlowReadLogos/eggshell.png",
+      "sizes": "180x180", 
+      "type": "image/png",
+      "purpose": "apple-touch-icon"
+    }
+  ],
+  "categories": ["education", "productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "FlowReadLogos/eggshell.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "prefer_related_applications": false,
+  "lang": "en",
+  "dir": "ltr"
+}
