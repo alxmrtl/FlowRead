@@ -459,12 +459,12 @@ body {
     gap: 0.5rem;
 }
 
-.slider-min,
-.slider-max {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    min-width: 40px;
-    text-align: center;
+.speed-control-bar .slider-min,
+.speed-control-bar .slider-max {
+    font-size: 0.65rem !important;
+    color: var(--text-secondary) !important;
+    min-width: 30px !important;
+    text-align: center !important;
 }
 
 #training-speed-slider {
@@ -3130,86 +3130,105 @@ textarea:focus {
     align-items: center !important;
     gap: 0.75rem !important;
     flex-wrap: nowrap !important;
+    width: 100% !important;
 }
 
 .text-controls .primary-btn {
-    flex: 0 0 auto;
-    white-space: nowrap;
-    padding: 0.5rem 0.875rem;
-    font-size: 0.875rem;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    padding: 0.5rem 0.875rem !important;
+    font-size: 0.875rem !important;
 }
 
-.text-controls .custom-dropdown {
-    flex: 1;
-    min-width: 120px;
+.text-controls .current-text-display {
+    flex: 1 1 auto !important;
+    margin-top: 0 !important;
+    padding: 0.4rem 0.6rem !important;
+    min-height: 36px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+}
+
+.current-text-title {
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.1rem !important;
+}
+
+.current-text-info {
+    font-size: 0.65rem !important;
+    line-height: 1.2 !important;
 }
 
 /* STYLE Section */
 .control-box .style-controls {
     display: flex !important;
     align-items: center !important;
-    gap: 1rem !important;
+    gap: 0.75rem !important;
     flex-wrap: nowrap !important;
+    width: 100% !important;
 }
 
-.style-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
+.control-box .style-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    flex: 1 !important;
+    min-width: 0 !important;
 }
 
-.style-label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    min-width: 30px;
-    white-space: nowrap;
+.control-box .style-label {
+    font-size: 0.7rem !important;
+    font-weight: 500 !important;
+    color: var(--text-primary) !important;
+    min-width: 28px !important;
+    white-space: nowrap !important;
 }
 
-.size-control {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    min-width: 80px;
+.control-box .size-control {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
+    min-width: 0 !important;
 }
 
-.size-control .slider-group {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    min-width: 60px;
+.control-box .size-control .slider-group {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 !important;
+    min-width: 50px !important;
 }
 
-.size-control .control-display {
-    text-align: center;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    min-width: 28px;
-    white-space: nowrap;
+.control-box .size-control .control-display {
+    text-align: center !important;
+    font-size: 0.65rem !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    min-width: 24px !important;
+    white-space: nowrap !important;
 }
 
-.font-toggle {
-    display: flex;
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-    flex: 0 0 auto;
+.control-box .font-toggle {
+    display: flex !important;
+    border: 2px solid var(--border) !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    flex: 0 0 auto !important;
 }
 
-.font-btn {
-    padding: 0.3rem 0.5rem;
-    border: none;
-    background: white;
-    color: var(--text-secondary);
-    font-size: 0.75rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-right: 1px solid var(--border);
-    white-space: nowrap;
+.control-box .font-btn {
+    padding: 0.25rem 0.4rem !important;
+    border: none !important;
+    background: white !important;
+    color: var(--text-secondary) !important;
+    font-size: 0.7rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    border-right: 1px solid var(--border) !important;
+    white-space: nowrap !important;
 }
 
 .font-btn:last-child {
@@ -3252,29 +3271,29 @@ textarea:focus {
 }
 
 .control-bar-left {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 0 0 auto;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    flex: 0 0 auto !important;
 }
 
 .control-bar-right {
-    flex: 1;
-    min-width: 0;
-    max-width: none;
-    margin-left: 0;
+    flex: 1 !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-left: 0 !important;
 }
 
 .control-bar-btn {
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.875rem;
-    white-space: nowrap;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
 }
 
 .control-bar-btn.secondary {
@@ -3294,35 +3313,35 @@ textarea:focus {
 }
 
 .speed-control-bar .speed-control-top {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    flex: 1 !important;
 }
 
 .speed-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    white-space: nowrap;
-    min-width: 40px;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: var(--primary-color) !important;
+    white-space: nowrap !important;
+    min-width: 35px !important;
 }
 
 .speed-control-bar .slider-group {
-    flex: 1;
-    min-width: 100px;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
+    flex: 1 !important;
+    min-width: 80px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
 }
 
 .speed-control-bar .control-display {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    white-space: nowrap;
-    text-align: center;
-    min-width: 45px;
+    font-size: 0.65rem !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    min-width: 40px !important;
 }
 
 /* Current Text Display */
