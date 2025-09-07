@@ -1248,9 +1248,9 @@ class TrainingZone {
         if (!btnText) return;
         
         if (isPaused) {
-            btnText.textContent = '▶ Resume';
+            btnText.textContent = '▶';
         } else {
-            btnText.textContent = '⏸ Pause';
+            btnText.textContent = '⏸';
         }
     }
 
