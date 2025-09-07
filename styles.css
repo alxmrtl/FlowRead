@@ -84,6 +84,19 @@ body {
     transition: opacity 0.3s ease;
 }
 
+/* Mobile app version - reduce logo size by 50% */
+@media (display-mode: standalone) {
+    .logo-image {
+        height: 24px;
+    }
+    
+    .logo-fallback {
+        height: 24px;
+        padding: 0 8px;
+        font-size: 14px;
+    }
+}
+
 .logo-image.loaded {
     opacity: 1;
 }
@@ -3592,6 +3605,16 @@ textarea:focus {
     pointer-events: auto;
 }
 
+/* Global initial button states */
+#pause-training,
+#stop-training {
+    display: none;
+}
+
+#start-training {
+    display: flex;
+}
+
 /* Mobile-specific button state improvements */
 @media (max-width: 768px) {
     .control-bar-btn {
@@ -3614,9 +3637,25 @@ textarea:focus {
     #stop-training {
         min-width: 80px;
         height: 40px;
-        display: flex;
         align-items: center;
         justify-content: center;
+    }
+    
+    /* Ensure start button is visible by default */
+    #start-training {
+        display: flex !important;
+    }
+    
+    /* Ensure pause/stop buttons are hidden by default */
+    #pause-training,
+    #stop-training {
+        display: none !important;
+    }
+    
+    /* Only show pause/stop when explicitly set to flex */
+    #pause-training[style*="display: flex"],
+    #stop-training[style*="display: flex"] {
+        display: flex !important;
     }
 }
 
