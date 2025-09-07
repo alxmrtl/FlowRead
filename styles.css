@@ -67,14 +67,16 @@ body {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    gap: 2rem;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
 .brand {
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex: 0 0 50%;
+    max-width: 50%;
 }
 
 .logo-image {
@@ -150,6 +152,9 @@ body {
     border-radius: 12px;
     padding: 0.5rem;
     backdrop-filter: blur(10px);
+    flex: 0 0 50%;
+    max-width: 50%;
+    justify-content: flex-end;
 }
 
 .nav-btn {
@@ -3230,7 +3235,7 @@ textarea:focus {
     flex: 1 !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0.3rem !important;
+    gap: 0.5rem !important;
     min-width: 0 !important;
 }
 
@@ -3281,8 +3286,9 @@ textarea:focus {
 }
 
 .font-btn.active {
-    background: var(--primary-color);
-    color: white;
+    background: var(--primary-color) !important;
+    color: white !important;
+    box-shadow: 0 2px 4px rgba(81, 125, 99, 0.3) !important;
 }
 
 /* Persistent Control Bar */
@@ -3317,6 +3323,12 @@ textarea:focus {
     flex: 0 0 auto !important;
     max-width: 55% !important;
     overflow: hidden !important;
+}
+
+/* When in training mode, adjust layout */
+.persistent-control-bar.training-mode .control-bar-left {
+    justify-content: flex-start !important;
+    min-width: 0 !important;
 }
 
 .control-bar-right {
@@ -3361,7 +3373,7 @@ textarea:focus {
 .speed-control-bar .speed-control-top {
     display: flex !important;
     align-items: center !important;
-    gap: 0.3rem !important;
+    gap: 0.5rem !important;
     flex: 1 !important;
     min-width: 0 !important;
 }
@@ -3613,6 +3625,21 @@ textarea:focus {
 
 #start-training {
     display: flex;
+}
+
+/* Value Badge - elegant compact display for current values */
+.value-badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(81, 125, 99, 0.2);
+    min-width: 45px;
+    text-align: center;
+    flex: 0 0 auto;
 }
 
 /* Mobile-specific button state improvements */
