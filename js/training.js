@@ -439,15 +439,16 @@ class TrainingZone {
             console.error('Speed controls not found - speedSlider:', !!speedSlider, 'speedValue:', !!speedValue);
         }
         
-        // Start training button
+        // Start training button (primary connection)
         const startTrainingBtn = document.getElementById('start-training');
-        if (startTrainingBtn) {
+        if (startTrainingBtn && !startTrainingBtn.hasAttribute('data-listener-attached')) {
             startTrainingBtn.addEventListener('click', () => {
                 console.log('Start training button clicked');
                 this.startTraining();
             });
+            startTrainingBtn.setAttribute('data-listener-attached', 'true');
             console.log('Start training button connected');
-        } else {
+        } else if (!startTrainingBtn) {
             console.error('Start training button not found');
         }
         
@@ -483,19 +484,8 @@ class TrainingZone {
             console.error('Size controls not found - sizeSlider:', !!sizeSlider, 'sizeValue:', !!sizeValue);
         }
         
-        // Training start button
-        const startBtn = document.getElementById('start-training');
-        
-        if (startBtn) {
-            startBtn.onclick = () => {
-                console.log('Start training button clicked');
-                this.startTraining();
-                // Auto-collapse training panel when starting training
-                if (typeof collapseTrainingPanel === 'function') {
-                    collapseTrainingPanel();
-                }
-            };
-        }
+        // Training start button (already connected above, skip duplicate)
+        console.log('Training start button setup complete (avoiding duplicate listener)');
         
         // Initial vs baseline update
         this.updateVsBaseline();
@@ -1513,26 +1503,27 @@ class TrainingZone {
         const pauseButton = document.getElementById('pause-training');
         const stopButton = document.getElementById('stop-training');
         
+        console.log('Transforming control bar to training mode');
+        
         if (controlBar) {
             controlBar.classList.add('training-mode');
         }
         
-        // Hide start button and show pause/stop buttons with smooth animation
+        // Immediate state change for mobile reliability
         if (startButton) {
+            startButton.style.display = 'none';
+            startButton.classList.remove('showing');
             startButton.classList.add('hiding');
-            setTimeout(() => {
-                startButton.style.display = 'none';
-                if (pauseButton && stopButton) {
-                    pauseButton.style.display = 'flex';
-                    stopButton.style.display = 'flex';
-                    // Trigger reflow
-                    pauseButton.offsetHeight;
-                    stopButton.offsetHeight;
-                    // Add showing class for animation
-                    pauseButton.classList.add('showing');
-                    stopButton.classList.add('showing');
-                }
-            }, 150);
+        }
+        
+        if (pauseButton && stopButton) {
+            pauseButton.style.display = 'flex';
+            stopButton.style.display = 'flex';
+            pauseButton.classList.remove('hiding');
+            stopButton.classList.remove('hiding');
+            pauseButton.classList.add('showing');
+            stopButton.classList.add('showing');
+            console.log('Pause and stop buttons shown');
         }
     }
 
@@ -1543,30 +1534,28 @@ class TrainingZone {
         const pauseButton = document.getElementById('pause-training');
         const stopButton = document.getElementById('stop-training');
         
+        console.log('Resetting control bar to initial state');
+        
         if (controlBar) {
             controlBar.classList.remove('training-mode');
         }
         
-        // Hide pause/stop buttons and show start button
+        // Immediate state change for mobile reliability
         if (pauseButton && stopButton) {
+            pauseButton.style.display = 'none';
+            stopButton.style.display = 'none';
             pauseButton.classList.remove('showing');
             stopButton.classList.remove('showing');
             pauseButton.classList.add('hiding');
             stopButton.classList.add('hiding');
-            
-            setTimeout(() => {
-                pauseButton.style.display = 'none';
-                stopButton.style.display = 'none';
-                if (startButton) {
-                    startButton.style.display = 'flex';
-                    startButton.classList.remove('hiding');
-                    startButton.classList.add('showing');
-                    // Clean up classes
-                    setTimeout(() => {
-                        startButton.classList.remove('showing');
-                    }, 300);
-                }
-            }, 150);
+            console.log('Pause and stop buttons hidden');
+        }
+        
+        if (startButton) {
+            startButton.style.display = 'flex';
+            startButton.classList.remove('hiding');
+            startButton.classList.add('showing');
+            console.log('Start button shown');
         }
         
         // Reset training controls container
