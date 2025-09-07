@@ -224,7 +224,6 @@
                                 </div>
                             </div>
                             <div class="style-row">
-                                <label class="style-label">Font</label>
                                 <div class="font-toggle">
                                     <button class="font-btn active" data-font="serif" onclick="toggleFont('serif')">Serif</button>
                                     <button class="font-btn" data-font="sans" onclick="toggleFont('sans')">Sans</button>
@@ -238,26 +237,25 @@
                 <div class="persistent-control-bar" id="persistent-control-bar">
                     <div class="control-bar-left">
                         <button id="start-training" class="primary-btn control-bar-btn">
-                            <span class="btn-text">▶ Start Training</span>
+                            <span class="btn-text">▶ Start</span>
                         </button>
                         <!-- These will be hidden initially and shown during training -->
                         <button id="pause-training" class="primary-btn control-bar-btn" style="display: none;">
-                            <span class="btn-text">⏸ Pause</span>
+                            <span class="btn-text">⏸</span>
                         </button>
                         <button id="stop-training" class="primary-btn control-bar-btn secondary" style="display: none;">
-                            <span class="btn-text">⏹ Stop</span>
+                            <span class="btn-text">⏹</span>
                         </button>
                     </div>
                     <div class="control-bar-right">
                         <div class="speed-control-bar">
                             <div class="speed-control-top">
                                 <div class="value-badge">
-                                    <span id="speed-value">250</span> WPM
+                                    <span id="speed-value">250</span>
+                                    <div class="wpm-label">WPM</div>
                                 </div>
                                 <div class="slider-group">
-                                    <span class="slider-min">100</span>
                                     <input type="range" id="training-speed-slider" min="100" max="800" value="250" step="10">
-                                    <span class="slider-max">800</span>
                                 </div>
                             </div>
                         </div>

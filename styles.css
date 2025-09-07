@@ -3209,9 +3209,8 @@ textarea:focus {
 /* STYLE Section */
 .control-box .style-controls {
     display: flex !important;
-    align-items: center !important;
+    flex-direction: column !important;
     gap: 0.75rem !important;
-    flex-wrap: nowrap !important;
     width: 100% !important;
 }
 
@@ -3221,6 +3220,7 @@ textarea:focus {
     gap: 0.4rem !important;
     flex: 1 !important;
     min-width: 0 !important;
+    width: 100% !important;
 }
 
 .control-box .style-label {
@@ -3260,7 +3260,8 @@ textarea:focus {
     border: 2px solid var(--border) !important;
     border-radius: 6px !important;
     overflow: hidden !important;
-    flex: 0 0 auto !important;
+    flex: 1 !important;
+    width: 100% !important;
 }
 
 .control-box .font-btn {
@@ -3274,6 +3275,8 @@ textarea:focus {
     transition: all 0.2s ease !important;
     border-right: 1px solid var(--border) !important;
     white-space: nowrap !important;
+    flex: 1 !important;
+    text-align: center !important;
 }
 
 .font-btn:last-child {
@@ -3323,6 +3326,7 @@ textarea:focus {
     flex: 0 0 auto !important;
     max-width: 55% !important;
     overflow: hidden !important;
+    flex-wrap: nowrap !important;
 }
 
 /* When in training mode, adjust layout */
@@ -3629,17 +3633,27 @@ textarea:focus {
 
 /* Value Badge - elegant compact display for current values */
 .value-badge {
-    background: var(--primary-color);
-    color: white;
-    padding: 0.2rem 0.4rem;
+    background: #d1d5db;
+    color: #374151;
+    padding: 0.3rem 0.4rem;
     border-radius: 6px;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 600;
     white-space: nowrap;
-    box-shadow: 0 1px 3px rgba(81, 125, 99, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     min-width: 45px;
     text-align: center;
     flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+}
+
+.wpm-label {
+    font-size: 0.6rem !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
 }
 
 /* Mobile-specific button state improvements */
@@ -3662,10 +3676,17 @@ textarea:focus {
     #start-training,
     #pause-training,
     #stop-training {
-        min-width: 80px;
+        min-width: 60px;
         height: 40px;
         align-items: center;
         justify-content: center;
+        margin: 0;
+        flex-shrink: 0;
+    }
+    
+    #pause-training,
+    #stop-training {
+        min-width: 48px;
     }
     
     /* Ensure start button is visible by default */
