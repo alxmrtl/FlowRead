@@ -1793,5 +1793,21 @@ function deleteCurrentText() {
     app.textManager.deleteCurrentText();
 }
 
+// FAQ Toggle Functionality
+function toggleFAQ(button) {
+    const answer = button.nextElementSibling;
+    const isActive = button.classList.contains('active');
+    
+    if (isActive) {
+        // Close this FAQ
+        button.classList.remove('active');
+        answer.classList.remove('active');
+    } else {
+        // Open this FAQ
+        button.classList.add('active');
+        answer.classList.add('active');
+    }
+}
+
 // Export app for debugging
 window.FlowReadApp = app;

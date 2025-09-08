@@ -62,6 +62,10 @@
                         <span class="nav-icon">△</span>
                         <span class="nav-label">Train</span>
                     </button>
+                    <button class="nav-btn" data-mode="about">
+                        <span class="nav-icon">?</span>
+                        <span class="nav-label">About</span>
+                    </button>
                 </nav>
             </div>
         </header>
@@ -307,7 +311,297 @@
                 </div>
             </div>
 
-
+            <!-- About Screen -->
+            <div class="screen" id="about-screen">
+                <div class="about-container">
+                    <div class="about-header">
+                        <h2>About FlowRead</h2>
+                        <p>Your comprehensive speed reading training companion</p>
+                    </div>
+                    
+                    <!-- Getting Started Section -->
+                    <div class="faq-section">
+                        <h3 class="section-title">🚀 Getting Started</h3>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>What is FlowRead and how does it work?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>FlowRead is a progressive web app designed to improve your reading speed through scientifically-backed training techniques. It combines rapid serial visual presentation (RSVP), chunked reading, and guided pacing to help you read faster while maintaining comprehension.</p>
+                                <p>The app works by training your eyes to move more efficiently across text, reducing subvocalization (inner speech), and helping you process larger chunks of information at once.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>How do I get started with FlowRead?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p><strong>Step 1:</strong> Take a speed test in the <em>Test</em> tab to establish your baseline reading speed.</p>
+                                <p><strong>Step 2:</strong> Go to the <em>Train</em> tab and select a training mode (Word-by-Word, Phrases, or Line-by-Line).</p>
+                                <p><strong>Step 3:</strong> Choose your text and adjust the speed to match your current ability.</p>
+                                <p><strong>Step 4:</strong> Practice regularly with progressively faster speeds as you improve.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>What's a good starting speed for training?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Start with a speed slightly faster than your baseline reading speed from the test. For example:</p>
+                                <ul>
+                                    <li>If you tested at 200 WPM, start training at 220-250 WPM</li>
+                                    <li>If you tested at 300 WPM, start training at 320-350 WPM</li>
+                                    <li>If you tested at 400+ WPM, start training at 420-450 WPM</li>
+                                </ul>
+                                <p>The key is to challenge yourself without creating frustration. Gradually increase speed as you become more comfortable.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>How often should I practice?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>For best results, practice 15-30 minutes daily. Consistency is more important than long sessions.</p>
+                                <p>A good routine might be:</p>
+                                <ul>
+                                    <li><strong>Beginners:</strong> 10-15 minutes daily, focusing on one training mode</li>
+                                    <li><strong>Intermediate:</strong> 20-25 minutes daily, mixing different modes</li>
+                                    <li><strong>Advanced:</strong> 30+ minutes daily, with regular speed increases</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Training Modes Section -->
+                    <div class="faq-section">
+                        <h3 class="section-title">🎯 Training Modes</h3>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>What's the difference between the training modes?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p><strong>Word-by-Word:</strong> Displays one word at a time at your set speed. Great for eliminating subvocalization and improving focus.</p>
+                                <p><strong>Phrases:</strong> Shows 6 words at once, helping you learn to process larger chunks of information. Improves comprehension at higher speeds.</p>
+                                <p><strong>Line-by-Line:</strong> Highlights complete lines sequentially, simulating natural reading while maintaining pace control. Best for transitioning to normal reading.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>Which training mode should I start with?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Start with <strong>Word-by-Word</strong> if you're new to speed reading. It's the most focused approach and helps break bad reading habits quickly.</p>
+                                <p>Once comfortable (after 1-2 weeks), try <strong>Phrases</strong> to improve your ability to process multiple words as units.</p>
+                                <p>Use <strong>Line-by-Line</strong> when you want to practice with a more natural reading experience at controlled speeds.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>Can I use my own texts for training?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Yes! Click "Choose Text" in the Train tab, then "New Text" to add your own content. You can:</p>
+                                <ul>
+                                    <li>Paste articles, books, or documents you want to read</li>
+                                    <li>Save multiple texts for different types of training</li>
+                                    <li>Use material relevant to your work or interests</li>
+                                </ul>
+                                <p>Training with familiar content types can improve your real-world reading speed more effectively.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress & Results Section -->
+                    <div class="faq-section">
+                        <h3 class="section-title">📈 Progress & Results</h3>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>How quickly will I see results?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Most users see improvements within the first week of regular practice:</p>
+                                <ul>
+                                    <li><strong>Days 1-3:</strong> Adjustment period, getting comfortable with the interface</li>
+                                    <li><strong>Week 1:</strong> 10-25% speed increase with maintained comprehension</li>
+                                    <li><strong>Week 2-4:</strong> 30-50% improvement as techniques become natural</li>
+                                    <li><strong>Month 2+:</strong> 50-100%+ improvement for dedicated users</li>
+                                </ul>
+                                <p>Results vary based on starting speed, practice frequency, and individual learning pace.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>What should I do if I hit a plateau?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Plateaus are normal. Try these strategies:</p>
+                                <ul>
+                                    <li><strong>Switch training modes:</strong> If using Word-by-Word, try Phrases mode</li>
+                                    <li><strong>Vary your content:</strong> Use different text types (news, fiction, technical)</li>
+                                    <li><strong>Take a break:</strong> Sometimes 2-3 days off helps consolidate gains</li>
+                                    <li><strong>Focus on comprehension:</strong> Ensure you're understanding what you read</li>
+                                    <li><strong>Increase challenge gradually:</strong> Push speed up in smaller increments</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>How do I know if I'm maintaining comprehension?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Good comprehension indicators include:</p>
+                                <ul>
+                                    <li>You can summarize what you've read</li>
+                                    <li>You remember key details and main ideas</li>
+                                    <li>You can answer questions about the content</li>
+                                    <li>The reading feels smooth, not rushed or confused</li>
+                                </ul>
+                                <p>If comprehension drops, reduce speed by 10-15% and focus on understanding before pushing speed again.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tips & Best Practices Section -->
+                    <div class="faq-section">
+                        <h3 class="section-title">💡 Tips & Best Practices</h3>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>What are the most important speed reading techniques?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p><strong>1. Eliminate subvocalization:</strong> Stop "hearing" words in your head. FlowRead's pacing helps break this habit.</p>
+                                <p><strong>2. Reduce fixations:</strong> Train your eyes to take in more words per glance instead of reading word-by-word.</p>
+                                <p><strong>3. Use peripheral vision:</strong> Learn to see groups of words rather than individual words.</p>
+                                <p><strong>4. Minimize regression:</strong> Avoid going back to re-read. Trust your first pass through the text.</p>
+                                <p><strong>5. Practice chunking:</strong> Group words into meaningful phrases rather than processing each word separately.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>What environment is best for training?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Optimize your training environment:</p>
+                                <ul>
+                                    <li><strong>Good lighting:</strong> Avoid eye strain with proper lighting</li>
+                                    <li><strong>Minimal distractions:</strong> Turn off notifications, find a quiet space</li>
+                                    <li><strong>Comfortable posture:</strong> Sit upright, screen at eye level</li>
+                                    <li><strong>Proper distance:</strong> Keep device 18-24 inches from your eyes</li>
+                                    <li><strong>Regular breaks:</strong> Follow the 20-20-20 rule (every 20 min, look at something 20 feet away for 20 seconds)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>Should I adjust the font size or style?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Yes! Customize the display for optimal comfort:</p>
+                                <ul>
+                                    <li><strong>Font size:</strong> Use the slider to find a size that's easy to read without straining</li>
+                                    <li><strong>Font style:</strong> Choose Serif for traditional reading or Sans for screen reading</li>
+                                    <li><strong>Screen brightness:</strong> Match your device brightness to ambient lighting</li>
+                                </ul>
+                                <p>The right settings reduce eye fatigue and help you maintain focus during longer sessions.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Technical & Troubleshooting Section -->
+                    <div class="faq-section">
+                        <h3 class="section-title">🔧 Technical & Troubleshooting</h3>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>Can I use FlowRead offline?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Yes! FlowRead is a Progressive Web App (PWA) that works offline:</p>
+                                <ul>
+                                    <li>All your saved texts are stored locally</li>
+                                    <li>Training functions work without internet</li>
+                                    <li>Progress data is saved on your device</li>
+                                    <li>Install it to your home screen like a native app</li>
+                                </ul>
+                                <p>Perfect for practicing during commutes or when internet is unreliable.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>How do I install FlowRead as an app?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p><strong>On mobile:</strong> When you visit FlowRead, look for an "Install" or "Add to Home Screen" prompt. Tap it to install.</p>
+                                <p><strong>On desktop:</strong> Look for an install icon in your browser's address bar, or use the browser menu to "Install FlowRead".</p>
+                                <p>Once installed, FlowRead will behave like a native app with its own icon and fast startup.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>Is my data safe and private?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Absolutely. FlowRead prioritizes your privacy:</p>
+                                <ul>
+                                    <li>All data is stored locally on your device</li>
+                                    <li>No personal information is sent to external servers</li>
+                                    <li>Your texts and progress data never leave your device</li>
+                                    <li>No tracking, analytics, or data collection</li>
+                                </ul>
+                                <p>You have complete control over your data and can clear it anytime through your browser settings.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <button class="faq-question" onclick="toggleFAQ(this)">
+                                <span>What devices and browsers work best?</span>
+                                <span class="faq-arrow">▼</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>FlowRead works on all modern devices and browsers:</p>
+                                <p><strong>Recommended:</strong></p>
+                                <ul>
+                                    <li>Chrome, Safari, Firefox, Edge (latest versions)</li>
+                                    <li>iOS 12+, Android 7+</li>
+                                    <li>Desktop screens 13"+ for optimal experience</li>
+                                </ul>
+                                <p><strong>Mobile optimization:</strong> The app automatically adapts to your screen size with touch-friendly controls and optimized layouts.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Text Input Modal -->
             <div class="modal" id="text-input-modal">
